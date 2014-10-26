@@ -20,6 +20,14 @@ import java.util.function.Consumer;
 
 public final class Promise<T> {
 
+    public static <R> Promise<R> broken(final Throwable t) {
+
+        final Promise<R> rval = new Promise<>();
+        rval.fail(t);
+        return rval;
+
+    }
+
     public static <R> Promise<R> of(final R v) {
 
         final Promise<R> rval = new Promise<>();
@@ -27,6 +35,8 @@ public final class Promise<T> {
         return rval;
 
     }
+
+    private Throwable error;
 
     private T value;
 
@@ -37,31 +47,77 @@ public final class Promise<T> {
     /**
      * <p>
      * Emit the value of this promise. If the promise is fulfilled when this is
-     * invoked, the consumer is invoked immediately with the value. If this
-     * promise is broken now or in the future, the consumer is ignored. If this
-     * promise is incomplete, the consumer will be invoked if the promise
-     * becomes fulfilled later.
+     * invoked, the handler is invoked immediately with the value. If this
+     * promise is broken now or in the future, the handler is ignored. If this
+     * promise is incomplete, the handler will be invoked if the promise becomes
+     * fulfilled later.
      * </p>
      *
      * <p>
-     * Exceptions and errors are thrown to the caller if this promise is already
-     * fulfilled. Otherwise, they are thrown to the fulfilling caller. (TODO is
-     * this the best way?)
+     * {@link Throwable Throwables} thrown by the handler are thrown to the
+     * caller if this promise is already fulfilled. Otherwise, they are thrown
+     * to the fulfilling caller. (TODO is this the best way?)
      * </p>
      *
      *
      * @param h
      *            value handler. Must not be null.
      *
-     * @thows NullPointerException if the handler is null.
+     * @throws NullPointerException
+     *             if the handler is null.
      */
     public void forEach(final Consumer<? super T> h) {
 
-        h.accept(this.value);
+        if (this.error == null) {
+            h.accept(this.value);
+        }
 
     }
 
-    void succeed(final T v) {
+    /**
+     * <p>
+     * Emit the error of this promise. If the promise is broken when this is
+     * invoked, the handler is invoked immediately with the error. If this is
+     * promise is fulfilled now or in the future, the handler is ignored. If
+     * this promise is incomplete, the handler will be invoked if the promise is
+     * broken later.
+     * </p>
+     *
+     * <p>
+     * {@link Throwable Throwables} thrown by the handler are thrown to the
+     * caller if this promise is already broken. Otherwise, they are thrown to
+     * the breaking caller. (TODO is this the best way?)
+     * </p>
+     *
+     * @param <X>
+     *            type of throwable to handle.
+     *
+     * @param sel
+     *            exception selector. The consumer will be called only if the
+     *            error is an instance of this type.
+     *
+     * @param h
+     *            value handler. Must not be null.
+     *
+     * @throws NullPointerException
+     *             if the handler is null.
+     */
+    public <X extends Throwable> void on(final Class<X> sel,
+            final Consumer<? super X> h) {
+
+        if (sel.isInstance(this.error)) {
+            h.accept(sel.cast(this.error));
+        }
+
+    }
+
+    private void fail(final Throwable t) {
+
+        this.error = t;
+
+    }
+
+    private void succeed(final T v) {
         this.value = v;
     }
 

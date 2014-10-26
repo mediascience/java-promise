@@ -18,11 +18,78 @@ package com.msiops.ground.promise;
 
 import static org.junit.Assert.*;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
 
 public class UsageTest {
+
+    @Test
+    public void testDegenerateBroken() {
+
+        final Exception expected = new Exception();
+
+        final Promise<Integer> p = Promise.broken(expected);
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        p.on(Exception.class, x -> {
+            actual.set(x);
+        });
+        assertEquals(expected, actual.get());
+
+    }
+
+    @Test
+    public void testDegenerateBrokenDoesNotEmitValue() {
+
+        final Promise<?> p = Promise.broken(new Exception());
+
+        final AtomicBoolean actual = new AtomicBoolean();
+        p.forEach(o -> {
+            actual.set(true);
+        });
+        assertFalse(actual.get());
+
+    }
+
+    @Test
+    public void testDegenerateBrokenSelectException() {
+
+        final Exception expected = new Exception();
+        final Promise<Integer> p = Promise.broken(expected);
+
+        final AtomicReference<Object> e = new AtomicReference<>();
+        final AtomicReference<Object> rte = new AtomicReference<>();
+
+        p.on(Exception.class, x -> {
+            e.set(x);
+        });
+
+        p.on(RuntimeException.class, x -> {
+            rte.set(x);
+        });
+
+        assertEquals(expected, e.get());
+        assertNull(rte.get());
+
+    }
+
+    @Test
+    public void testDegenerateBrokenThrowsHandlerExceptions() {
+
+        final Promise<Integer> p = Promise.broken(new Exception());
+
+        try {
+            p.on(Exception.class, x -> {
+                throw new RuntimeException();
+            });
+            fail("should throw");
+        } catch (final RuntimeException x) {
+            // OK
+        }
+    }
 
     @Test
     public void testDegenerateFulfilled() {
@@ -38,7 +105,21 @@ public class UsageTest {
     }
 
     @Test
-    public void testDegenerateFulfilledThrowsConsumerExceptions() {
+    public void testDegenerateFulfilledDoesNotEmitError() {
+
+        final Promise<?> p = Promise.of(12);
+
+        final AtomicBoolean actual = new AtomicBoolean();
+        p.on(Throwable.class, x -> {
+            actual.set(true);
+        });
+
+        assertFalse(actual.get());
+
+    }
+
+    @Test
+    public void testDegenerateFulfilledThrowsHandlerExceptions() {
 
         final Promise<Integer> p = Promise.of(12);
 
