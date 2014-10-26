@@ -360,7 +360,7 @@ public class UsageTest {
 	}
 
 	@Test
-	public void testDegenerateMap() {
+	public void testDegenerateFulfilledMap() {
 
 		final Promise<Integer> p = Promise.of(12);
 
@@ -368,6 +368,17 @@ public class UsageTest {
 
 		checkFulfilled(m, "24");
 
+	}
+	
+	
+	@Test public void testDegenerateBrokenMap() {
+		
+		final Exception expected = new Exception();
+		final Promise<?> p = Promise.<Integer>broken(expected).map(i -> 2 * i).map(String::valueOf);
+		
+		checkBroken(p, expected);
+		
+		
 	}
 
 	@Test

@@ -237,6 +237,8 @@ public final class Promise<T> {
 			public void next(T value, Throwable x) throws Throwable {
 				if (x == null) {
 					rval.succeed(f.apply(value));
+				} else {
+					rval.fail(x);
 				}
 			}
 		};
