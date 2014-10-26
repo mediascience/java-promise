@@ -359,6 +359,34 @@ public class UsageTest {
 
     }
 
+    @Test public void testDegenerateMap() {
+    	
+    	final Promise<Integer> p = Promise.of(12);
+    	
+    	final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
+    	
+    	checkFulfilled(m, "24");
+    	
+    }
+    
+    @Test public  void testAsyncMap() {
+    	
+    	final Async<Integer> a = new Async<>();
+    	final Promise<Integer> p = a.promise();
+    	
+    	final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
+    	
+    	final AtomicReference<Object> actual = new AtomicReference<>();
+    	m.forEach(o -> actual.set(o));
+    	
+    	assertNull(actual.get());
+    	
+    	a.succeed(12);
+    	
+    	assertEquals("24", actual.get());
+    	
+    }
+    
     private void checkBroken(final Promise<?> p, final Throwable expected) {
 
         final AtomicReference<Object> actual = new AtomicReference<>();

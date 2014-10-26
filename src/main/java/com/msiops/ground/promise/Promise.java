@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class Promise<T> {
 
@@ -226,5 +227,24 @@ public final class Promise<T> {
             }
         }
     }
+
+	public <R> Promise<R> map(Function<? super T, ? extends R> f) {
+	  
+		final Promise<R> rval = new Promise<>();
+		
+		final Link<T> link = new Link<T>(){
+			@Override
+			public void next(T value, Throwable x) throws Throwable {
+				if (x == null) {
+					rval.succeed(f.apply(value));
+				}
+			}
+		};
+		
+		dispatch(link);
+
+		return rval;
+		
+	}
 
 }
