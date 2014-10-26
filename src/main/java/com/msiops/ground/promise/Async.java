@@ -16,12 +16,17 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public final class Async<T> {
+
+    private final AtomicBoolean completed = new AtomicBoolean();
 
     private final Promise<T> p = new Promise<>();
 
     /**
-     * Break the managed {@link Promise}.
+     * Break the managed {@link Promise}. Only one completion invocation, this
+     * method or {@link #succeed(Object)}, is allowed per instance.
      *
      * @param x
      *            error. Must not be null.
@@ -29,9 +34,13 @@ public final class Async<T> {
      * @throws NullPointerException
      *             if the argument is null.
      *
+     * @throws IllegalStateException
+     *             if the promise is already completed.
+     *
      */
     public void fail(final Throwable x) {
 
+        race();
         this.p.fail(x);
 
     }
@@ -46,13 +55,26 @@ public final class Async<T> {
     }
 
     /**
-     * Fulfill the managed {@link Promise}.
+     * Fulfill the managed {@link Promise}. Only one completion invocation, this
+     * method or {@link #fail(Throwable)}, is allowed per instance.
      *
      * @param value
      *            fulfillment value.
+     *
+     * @throws IllegalStateException
+     *             if the promise is already completed.
      */
     public void succeed(final T value) {
+
+        race();
         this.p.succeed(value);
+    }
+
+    private void race() {
+        final boolean win = this.completed.compareAndSet(false, true);
+        if (!win) {
+            throw new IllegalStateException("promise is completed already");
+        }
     }
 
 }

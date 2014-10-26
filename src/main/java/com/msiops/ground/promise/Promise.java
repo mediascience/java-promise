@@ -184,6 +184,10 @@ public final class Promise<T> {
 
         final List<Link<T>> links;
         synchronized (this.pending) {
+            if (this.completed) {
+                throw new AssertionError(
+                        "completion invoked on completed promise");
+            }
             this.completed = true;
             this.value = v;
             this.error = x;
@@ -203,17 +207,15 @@ public final class Promise<T> {
 
     private void dispatch(final Link<T> link) {
 
-        final Link<T> immediate;
+        final boolean immediate;
         synchronized (this.pending) {
-            if (this.completed) {
-                immediate = link;
-            } else {
+            immediate = this.completed;
+            if (!immediate) {
                 this.pending.add(link);
-                immediate = null;
             }
         }
 
-        if (immediate != null) {
+        if (immediate) {
             try {
                 link.next(this.value, this.error);
             } catch (Error | RuntimeException x) {

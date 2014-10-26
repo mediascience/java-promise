@@ -28,6 +28,20 @@ import com.msiops.ground.promise.Promise;
 
 public class UsageTest {
 
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncBreakBrokenFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(new RuntimeException());
+        a.succeed(new RuntimeException());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncBreakFulfilledFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(25);
+        a.succeed(new RuntimeException());
+    }
+
     @Test
     public void testAsyncBroken() {
 
@@ -169,6 +183,13 @@ public class UsageTest {
 
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncFulfillBrokenFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(new RuntimeException());
+        a.succeed(25);
+    }
+
     @Test
     public void testAsyncFulfilled() {
 
@@ -178,6 +199,15 @@ public class UsageTest {
         a.succeed(12);
 
         checkFulfilled(p, 12);
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncFulfillFulfilledFails() {
+
+        final Async<Object> a = new Async<>();
+        a.succeed(15);
+        a.succeed(25);
 
     }
 
