@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.msiops.ground.promise;
+package fn.com.msiops.ground.promise;
 
 import static org.junit.Assert.*;
 
@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
+
+import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.Promise;
 
 public class UsageTest {
 
