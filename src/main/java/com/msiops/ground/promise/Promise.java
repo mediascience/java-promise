@@ -66,7 +66,7 @@ public final class Promise<T> {
 
     }
 
-    private boolean complete = false;
+    private boolean completed = false;
 
     private Throwable error = null;
 
@@ -102,28 +102,23 @@ public final class Promise<T> {
      */
     public void forEach(final Consumer<? super T> h) {
 
-        if (!this.complete) {
-            final Link<T> link = new Link<T>() {
-                @Override
-                public void next(final T value, final Throwable x)
-                        throws Throwable {
-                    if (x == null) {
-                        /*
-                         * not an error so invoke the handler.
-                         */
-                        h.accept(value);
-                    }
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+                if (x == null) {
                     /*
-                     * else nothing to do
+                     * not an error so invoke the handler.
                      */
-
+                    h.accept(value);
                 }
-            };
-            this.pending.add(link);
+                /*
+                 * else nothing to do
+                 */
 
-        } else if (this.error == null) {
-            h.accept(this.value);
-        }
+            }
+        };
+
+        dispatch(link);
 
     }
 
@@ -158,47 +153,45 @@ public final class Promise<T> {
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
 
-        if (!this.complete) {
-            final Link<T> link = new Link<T>() {
-                @Override
-                public void next(final T value, final Throwable x)
-                        throws Throwable {
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
 
-                    if (sel.isInstance(x)) {
-                        h.accept(sel.cast(x));
-                    }
-
+                if (sel.isInstance(x)) {
+                    h.accept(sel.cast(x));
                 }
-            };
-            this.pending.add(link);
-        } else if (sel.isInstance(this.error)) {
-            h.accept(sel.cast(this.error));
-        }
+
+            }
+        };
+
+        dispatch(link);
 
     }
 
-    void fail(final Throwable t) {
+    void fail(final Throwable x) {
 
-        this.complete = true;
-        this.error = Objects.requireNonNull(t);
-
-        this.pending.forEach(l -> {
-            try {
-                l.next(this.value, this.error);
-            } catch (final Throwable e) {
-                // do nothing yet
-                // TODO figure out just what this means
-            }
-        });
+        complete(null, Objects.requireNonNull(x));
 
     }
 
     void succeed(final T v) {
 
-        this.complete = true;
-        this.value = v;
+        complete(v, null);
 
-        this.pending.forEach(l -> {
+    }
+
+    private void complete(final T v, final Throwable x) {
+
+        final List<Link<T>> links;
+        synchronized (this.pending) {
+            this.completed = true;
+            this.value = v;
+            this.error = x;
+            links = new ArrayList<>(this.pending);
+            this.pending.clear();
+        }
+
+        links.forEach(l -> {
             try {
                 l.next(this.value, this.error);
             } catch (final Throwable e) {
@@ -206,6 +199,30 @@ public final class Promise<T> {
                 // TODO figure out just what this means
             }
         });
+    }
+
+    private void dispatch(final Link<T> link) {
+
+        final Link<T> immediate;
+        synchronized (this.pending) {
+            if (this.completed) {
+                immediate = link;
+            } else {
+                this.pending.add(link);
+                immediate = null;
+            }
+        }
+
+        if (immediate != null) {
+            try {
+                link.next(this.value, this.error);
+            } catch (Error | RuntimeException x) {
+                throw x;
+            } catch (final Throwable x) {
+                // do nothing yet
+                // TODO figure out just what this means
+            }
+        }
     }
 
 }
