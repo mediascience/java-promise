@@ -66,7 +66,7 @@ public final class Promise<T> {
 
     }
 
-    private boolean complete = false;
+    private boolean completed = false;
 
     private Throwable error = null;
 
@@ -170,21 +170,50 @@ public final class Promise<T> {
 
     void fail(final Throwable x) {
 
-        doComplete(null, Objects.requireNonNull(x));
+        complete(null, Objects.requireNonNull(x));
 
     }
 
     void succeed(final T v) {
 
-        doComplete(v, null);
+        complete(v, null);
 
+    }
+
+    private void complete(final T v, final Throwable x) {
+
+        final List<Link<T>> links;
+        synchronized (this.pending) {
+            this.completed = true;
+            this.value = v;
+            this.error = x;
+            links = new ArrayList<>(this.pending);
+            this.pending.clear();
+        }
+
+        links.forEach(l -> {
+            try {
+                l.next(this.value, this.error);
+            } catch (final Throwable e) {
+                // do nothing yet
+                // TODO figure out just what this means
+            }
+        });
     }
 
     private void dispatch(final Link<T> link) {
 
-        if (!this.complete) {
-            this.pending.add(link);
-        } else {
+        final Link<T> immediate;
+        synchronized (this.pending) {
+            if (this.completed) {
+                immediate = link;
+            } else {
+                this.pending.add(link);
+                immediate = null;
+            }
+        }
+
+        if (immediate != null) {
             try {
                 link.next(this.value, this.error);
             } catch (Error | RuntimeException x) {
@@ -194,22 +223,6 @@ public final class Promise<T> {
                 // TODO figure out just what this means
             }
         }
-    }
-
-    private void doComplete(final T v, final Throwable x) {
-
-        this.complete = true;
-        this.value = v;
-        this.error = x;
-
-        this.pending.forEach(l -> {
-            try {
-                l.next(this.value, this.error);
-            } catch (final Throwable e) {
-                // do nothing yet
-                // TODO figure out just what this means
-            }
-        });
     }
 
 }
