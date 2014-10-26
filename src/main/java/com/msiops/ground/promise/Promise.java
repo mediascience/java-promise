@@ -16,6 +16,8 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -68,6 +70,8 @@ public final class Promise<T> {
 
     private Throwable error = null;
 
+    private final List<Link<T>> pending = new ArrayList<Link<T>>();
+
     private T value = null;
 
     Promise() {
@@ -99,10 +103,25 @@ public final class Promise<T> {
     public void forEach(final Consumer<? super T> h) {
 
         if (!this.complete) {
-            return;
-        }
+            final Link<T> link = new Link<T>() {
+                @Override
+                public void next(final T value, final Throwable x)
+                        throws Throwable {
+                    if (x == null) {
+                        /*
+                         * not an error so invoke the handler.
+                         */
+                        h.accept(value);
+                    }
+                    /*
+                     * else nothing to do
+                     */
 
-        if (this.error == null) {
+                }
+            };
+            this.pending.add(link);
+
+        } else if (this.error == null) {
             h.accept(this.value);
         }
 
@@ -156,6 +175,15 @@ public final class Promise<T> {
 
         this.complete = true;
         this.value = v;
+
+        this.pending.forEach(l -> {
+            try {
+                l.next(this.value, null);
+            } catch (final Throwable e) {
+                // do nothing yet
+                // TODO figure out just what this means
+            }
+        });
     }
 
 }
