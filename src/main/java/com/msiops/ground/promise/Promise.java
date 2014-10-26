@@ -228,6 +228,19 @@ public final class Promise<T> {
 		}
 	}
 
+	/**
+	 * Transform the value. Produces a new promise that will be fulfilled or
+	 * broken as the original.
+	 * 
+	 * @param <R>
+	 *            the resulting promise's value type.
+	 * 
+	 * @param f
+	 *            mapping function. This is invoked only if the original promise
+	 *            is fulfilled. Must not be null.
+	 * 
+	 * @return promise of transformed value.
+	 */
 	public <R> Promise<R> map(Function<? super T, ? extends R> f) {
 
 		final Promise<R> rval = new Promise<>();
@@ -256,8 +269,8 @@ public final class Promise<T> {
 		final Link<T> link = new Link<T>() {
 			@Override
 			public void next(T value, Throwable x) throws Throwable {
-				
-				if ( x == null) {
+
+				if (x == null) {
 					final Promise<? extends R> upstream = mf.apply(value);
 					upstream.forEach(rval::succeed);
 					upstream.on(Throwable.class, rval::fail);
