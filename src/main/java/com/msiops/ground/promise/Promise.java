@@ -24,7 +24,10 @@ public final class Promise<T> {
     /**
      * Create a broken promise. The returned promise is complete.
      *
-     * @param t
+     * @param <R>
+     *            value type.
+     *
+     * @param x
      *            error, must not be null.
      *
      * @return created promise
@@ -33,16 +36,19 @@ public final class Promise<T> {
      *             if error is null.
      *
      */
-    public static <R> Promise<R> broken(final Throwable t) {
+    public static <R> Promise<R> broken(final Throwable x) {
 
         final Promise<R> rval = new Promise<>();
-        rval.fail(t);
+        rval.fail(x);
         return rval;
 
     }
 
     /**
      * Create a fulfilled promise. The returned promise is complete.
+     *
+     * @param <R>
+     *            value type.
      *
      * @param v
      *            fulfillment value. May be null.
@@ -58,9 +64,11 @@ public final class Promise<T> {
 
     }
 
-    private Throwable error;
+    private boolean complete = false;
 
-    private T value;
+    private Throwable error = null;
+
+    private T value = null;
 
     Promise() {
 
@@ -89,6 +97,10 @@ public final class Promise<T> {
      *             if the handler is null.
      */
     public void forEach(final Consumer<? super T> h) {
+
+        if (!this.complete) {
+            return;
+        }
 
         if (this.error == null) {
             h.accept(this.value);
@@ -135,11 +147,14 @@ public final class Promise<T> {
 
     void fail(final Throwable t) {
 
+        this.complete = true;
         this.error = Objects.requireNonNull(t);
 
     }
 
     void succeed(final T v) {
+
+        this.complete = true;
         this.value = v;
     }
 

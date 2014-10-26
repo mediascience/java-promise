@@ -61,6 +61,36 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncIncompleteDoesNotEmitErrorImmediately() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicBoolean emitted = new AtomicBoolean();
+
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(true);
+        });
+
+        assertFalse(emitted.get());
+
+    }
+
+    @Test
+    public void testAsyncIncompleteDoesNotEmitValueImmediately() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicBoolean emitted = new AtomicBoolean();
+
+        a.promise().forEach(o -> {
+            emitted.set(true);
+        });
+
+        assertFalse(emitted.get());
+
+    }
+
+    @Test
     public void testDegenerateBroken() {
 
         final Exception expected = new Exception();
