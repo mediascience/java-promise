@@ -1,6 +1,8 @@
 Promises for Java
 =========================
 
+[![Build Status](https://travis-ci.org/mediascience/java-promise.svg)](https://travis-ci.org/mediascience/java-promise)
+
 Create chains of futures as an alternative to nested
 callbacks.
 
