@@ -38,6 +38,8 @@ after the 1.x series is published will result in a new series, such as
 
 This work is inspired by the excellent Q library for Javascript.
 
+The Runaways provided the soundtrack during initial development.
+
 Thanks to Media Science International for being awesome.
 
 ## License
