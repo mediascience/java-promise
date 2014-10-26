@@ -111,13 +111,13 @@ public final class Promise<T> {
 
     }
 
-    private void fail(final Throwable t) {
+    void fail(final Throwable t) {
 
         this.error = t;
 
     }
 
-    private void succeed(final T v) {
+    void succeed(final T v) {
         this.value = v;
     }
 

@@ -19,12 +19,43 @@ package com.msiops.ground.promise;
 import static org.junit.Assert.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
 
 public class UsageTest {
+
+    @Test
+    public void testAsyncBroken() {
+
+        final Async<?> a = new Async<Object>();
+        final Promise<?> p = a.promise();
+
+        final Exception expected = new Exception();
+        a.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testAsyncFailNullIllegal() {
+
+        new Async<Object>().fail(null);
+
+    }
+
+    @Test
+    public void testAsyncFulfilled() {
+
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
+
+        a.succeed(12);
+
+        checkFulfilled(p, 12);
+
+    }
 
     @Test
     public void testDegenerateBroken() {
@@ -33,12 +64,7 @@ public class UsageTest {
 
         final Promise<Integer> p = Promise.broken(expected);
 
-        final AtomicReference<Object> actual = new AtomicReference<>();
-        p.on(Exception.class, x -> {
-            actual.set(x);
-        });
-        assertEquals(expected, actual.get());
-
+        checkBroken(p, expected);
     }
 
     @Test
@@ -96,11 +122,7 @@ public class UsageTest {
 
         final Promise<Integer> p = Promise.of(12);
 
-        final AtomicInteger actual = new AtomicInteger();
-        p.forEach(i -> {
-            actual.set(i);
-        });
-        assertEquals(12, actual.get());
+        checkFulfilled(p, 12);
 
     }
 
@@ -131,6 +153,30 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
+
+    }
+
+    private void checkBroken(final Promise<?> p, final Throwable expected) {
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+
+        p.on(Throwable.class, x -> {
+            actual.set(x);
+        });
+
+        assertEquals(expected, actual.get());
+
+    }
+
+    private void checkFulfilled(final Promise<?> p, final Object expected) {
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+
+        p.forEach(o -> {
+            actual.set(o);
+        });
+
+        assertEquals(expected, actual.get());
 
     }
 
