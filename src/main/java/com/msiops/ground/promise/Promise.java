@@ -177,26 +177,23 @@ public final class Promise<T> {
 
     }
 
-    void fail(final Throwable t) {
+    void fail(final Throwable x) {
 
-        this.complete = true;
-        this.error = Objects.requireNonNull(t);
-
-        this.pending.forEach(l -> {
-            try {
-                l.next(this.value, this.error);
-            } catch (final Throwable e) {
-                // do nothing yet
-                // TODO figure out just what this means
-            }
-        });
+        doComplete(null, Objects.requireNonNull(x));
 
     }
 
     void succeed(final T v) {
 
+        doComplete(v, null);
+
+    }
+
+    private void doComplete(final T v, final Throwable x) {
+
         this.complete = true;
         this.value = v;
+        this.error = x;
 
         this.pending.forEach(l -> {
             try {
