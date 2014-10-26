@@ -184,6 +184,10 @@ public final class Promise<T> {
 
         final List<Link<T>> links;
         synchronized (this.pending) {
+            if (this.completed) {
+                throw new AssertionError(
+                        "completion invoked on completed promise");
+            }
             this.completed = true;
             this.value = v;
             this.error = x;
