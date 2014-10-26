@@ -106,6 +106,9 @@ public class UsageTest {
             emitted2.set(x);
         });
 
+        assertNull(emitted1.get());
+        assertNull(emitted2.get());
+
         final Exception expected = new Exception();
         a.fail(expected);
 
