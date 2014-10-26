@@ -59,6 +59,32 @@ public class UsageTest {
 
     }
 
+    @Test
+    public void testAsyncDeferredValueMulti() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicReference<Object> emitted1 = new AtomicReference<>();
+        final AtomicReference<Object> emitted2 = new AtomicReference<>();
+
+        a.promise().forEach(o -> {
+            emitted1.set(o);
+        });
+        a.promise().forEach(o -> {
+            emitted2.set(o);
+        });
+
+        assertNull(emitted1.get());
+        assertNull(emitted2.get());
+
+        final Object expected = new Object();
+        a.succeed(expected);
+
+        assertEquals(expected, emitted1.get());
+        assertEquals(expected, emitted2.get());
+
+    }
+
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
