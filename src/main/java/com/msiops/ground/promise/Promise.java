@@ -158,7 +158,20 @@ public final class Promise<T> {
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
 
-        if (sel.isInstance(this.error)) {
+        if (!this.complete) {
+            final Link<T> link = new Link<T>() {
+                @Override
+                public void next(final T value, final Throwable x)
+                        throws Throwable {
+
+                    if (sel.isInstance(x)) {
+                        h.accept(sel.cast(x));
+                    }
+
+                }
+            };
+            this.pending.add(link);
+        } else if (sel.isInstance(this.error)) {
             h.accept(sel.cast(this.error));
         }
 
@@ -169,6 +182,15 @@ public final class Promise<T> {
         this.complete = true;
         this.error = Objects.requireNonNull(t);
 
+        this.pending.forEach(l -> {
+            try {
+                l.next(this.value, this.error);
+            } catch (final Throwable e) {
+                // do nothing yet
+                // TODO figure out just what this means
+            }
+        });
+
     }
 
     void succeed(final T v) {
@@ -178,7 +200,7 @@ public final class Promise<T> {
 
         this.pending.forEach(l -> {
             try {
-                l.next(this.value, null);
+                l.next(this.value, this.error);
             } catch (final Throwable e) {
                 // do nothing yet
                 // TODO figure out just what this means

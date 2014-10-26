@@ -42,6 +42,65 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncDeferredError() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicReference<Object> emitted = new AtomicReference<>();
+
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(x);
+        });
+
+        final Exception expected = new Exception();
+        a.fail(expected);
+
+        assertEquals(expected, emitted.get());
+
+    }
+
+    @Test
+    public void testAsyncDeferredErrorDoesNotEmitValue() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicBoolean emitted = new AtomicBoolean();
+
+        a.promise().forEach(o -> {
+            emitted.set(true);
+        });
+
+        final Exception expected = new Exception();
+        a.fail(expected);
+
+        assertFalse(emitted.get());
+
+    }
+
+    @Test
+    public void testAsyncDeferredErrorMulti() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicReference<Object> emitted1 = new AtomicReference<>();
+        final AtomicReference<Object> emitted2 = new AtomicReference<>();
+
+        a.promise().on(Throwable.class, x -> {
+            emitted1.set(x);
+        });
+        a.promise().on(Throwable.class, x -> {
+            emitted2.set(x);
+        });
+
+        final Exception expected = new Exception();
+        a.fail(expected);
+
+        assertEquals(expected, emitted1.get());
+        assertEquals(expected, emitted2.get());
+
+    }
+
+    @Test
     public void testAsyncDeferredValue() {
 
         final Async<Object> a = new Async<>();
@@ -56,6 +115,24 @@ public class UsageTest {
         a.succeed(expected);
 
         assertEquals(expected, emitted.get());
+
+    }
+
+    @Test
+    public void testAsyncDeferredValueDoesNotEmitError() {
+
+        final Async<Object> a = new Async<>();
+
+        final AtomicBoolean emitted = new AtomicBoolean();
+
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(true);
+        });
+
+        final Object expected = new Object();
+        a.succeed(expected);
+
+        assertFalse(emitted.get());
 
     }
 
