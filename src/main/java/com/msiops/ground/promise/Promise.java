@@ -102,28 +102,23 @@ public final class Promise<T> {
      */
     public void forEach(final Consumer<? super T> h) {
 
-        if (!this.complete) {
-            final Link<T> link = new Link<T>() {
-                @Override
-                public void next(final T value, final Throwable x)
-                        throws Throwable {
-                    if (x == null) {
-                        /*
-                         * not an error so invoke the handler.
-                         */
-                        h.accept(value);
-                    }
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+                if (x == null) {
                     /*
-                     * else nothing to do
+                     * not an error so invoke the handler.
                      */
-
+                    h.accept(value);
                 }
-            };
-            this.pending.add(link);
+                /*
+                 * else nothing to do
+                 */
 
-        } else if (this.error == null) {
-            h.accept(this.value);
-        }
+            }
+        };
+
+        dispatch(link);
 
     }
 
@@ -158,22 +153,18 @@ public final class Promise<T> {
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
 
-        if (!this.complete) {
-            final Link<T> link = new Link<T>() {
-                @Override
-                public void next(final T value, final Throwable x)
-                        throws Throwable {
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
 
-                    if (sel.isInstance(x)) {
-                        h.accept(sel.cast(x));
-                    }
-
+                if (sel.isInstance(x)) {
+                    h.accept(sel.cast(x));
                 }
-            };
-            this.pending.add(link);
-        } else if (sel.isInstance(this.error)) {
-            h.accept(sel.cast(this.error));
-        }
+
+            }
+        };
+
+        dispatch(link);
 
     }
 
@@ -187,6 +178,22 @@ public final class Promise<T> {
 
         doComplete(v, null);
 
+    }
+
+    private void dispatch(final Link<T> link) {
+
+        if (!this.complete) {
+            this.pending.add(link);
+        } else {
+            try {
+                link.next(this.value, this.error);
+            } catch (Error | RuntimeException x) {
+                throw x;
+            } catch (final Throwable x) {
+                // do nothing yet
+                // TODO figure out just what this means
+            }
+        }
     }
 
     private void doComplete(final T v, final Throwable x) {
