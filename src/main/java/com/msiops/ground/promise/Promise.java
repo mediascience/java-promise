@@ -16,10 +16,23 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class Promise<T> {
 
+    /**
+     * Create a broken promise. The returned promise is complete.
+     *
+     * @param t
+     *            error, must not be null.
+     *
+     * @return created promise
+     *
+     * @throws NullPointerException
+     *             if error is null.
+     *
+     */
     public static <R> Promise<R> broken(final Throwable t) {
 
         final Promise<R> rval = new Promise<>();
@@ -28,6 +41,15 @@ public final class Promise<T> {
 
     }
 
+    /**
+     * Create a fulfilled promise. The returned promise is complete.
+     *
+     * @param v
+     *            fulfillment value. May be null.
+     *
+     * @return created promise.
+     *
+     */
     public static <R> Promise<R> of(final R v) {
 
         final Promise<R> rval = new Promise<>();
@@ -113,7 +135,7 @@ public final class Promise<T> {
 
     void fail(final Throwable t) {
 
-        this.error = t;
+        this.error = Objects.requireNonNull(t);
 
     }
 

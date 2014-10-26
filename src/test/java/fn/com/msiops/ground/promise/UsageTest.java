@@ -83,6 +83,13 @@ public class UsageTest {
 
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testDegenerateBrokenNullInvalid() {
+
+        Promise.broken(null);
+
+    }
+
     @Test
     public void testDegenerateBrokenSelectException() {
 
@@ -144,6 +151,15 @@ public class UsageTest {
     }
 
     @Test
+    public void testDegenerateFulfilledNull() {
+
+        final Promise<?> p = Promise.of(null);
+
+        checkFulfilled(p, null);
+
+    }
+
+    @Test
     public void testDegenerateFulfilledThrowsHandlerExceptions() {
 
         final Promise<Integer> p = Promise.of(12);
@@ -174,11 +190,18 @@ public class UsageTest {
     private void checkFulfilled(final Promise<?> p, final Object expected) {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
+        /*
+         * needed because fulfilled value may be null so we need to distinguish
+         * between fulfilled null and not being called at all.
+         */
+        final AtomicBoolean set = new AtomicBoolean();
 
         p.forEach(o -> {
             actual.set(o);
+            set.set(true);
         });
 
+        assertTrue(set.get());
         assertEquals(expected, actual.get());
 
     }

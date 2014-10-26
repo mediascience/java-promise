@@ -16,8 +16,6 @@
  */
 package com.msiops.ground.promise;
 
-import java.util.Objects;
-
 public final class Async<T> {
 
     private final Promise<T> p = new Promise<>();
@@ -34,7 +32,7 @@ public final class Async<T> {
      */
     public void fail(final Throwable x) {
 
-        this.p.fail(Objects.requireNonNull(x));
+        this.p.fail(x);
 
     }
 
