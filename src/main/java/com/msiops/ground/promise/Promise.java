@@ -262,6 +262,21 @@ public final class Promise<T> {
 
 	}
 
+	/**
+	 * Transform the value. Produces a new promise that will be fulfilled
+	 * independently if this promise is fulfilled. If this promise is fulfilled,
+	 * a new promise is produced and placed upstream of the returned promise. If
+	 * this promise is broken, the returned promise is broken immediately and
+	 * the mapping function is not invoked.
+	 * 
+	 * <R> produced promise's value type.
+	 * 
+	 * @param mf
+	 *            mapping function
+	 * 
+	 * @return new promise of the transformed value.
+	 * 
+	 */
 	public <R> Promise<R> flatMap(Function<? super T, Promise<? extends R>> mf) {
 
 		final Promise<R> rval = new Promise<>();
