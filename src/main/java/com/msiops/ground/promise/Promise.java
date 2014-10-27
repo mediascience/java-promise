@@ -86,7 +86,7 @@ public final class Promise<T> {
      * this promise is broken, the returned promise is broken immediately and
      * the mapping function is not invoked.
      * 
-     * <R> produced promise's value type.
+     * @param <R> produced promise's value type.
      * 
      * @param mf
      *            mapping function
