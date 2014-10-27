@@ -53,7 +53,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBokenDoesNotEmit() {
+    public void testBokenDoesNotEmitValue() {
 
         this.pbroken.forEach(this.c);
 
@@ -113,7 +113,25 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledEmitValue() {
+    public void testFulfilledDoesNotEmitError() {
+
+        this.pfulfilled.on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+    }
+
+    @Test
+    public void testFulfilledHandleNull() {
+
+        Promise.of(null).forEach(this.c);
+
+        verify(this.c).accept(null);
+
+    }
+
+    @Test
+    public void testFulfilledHandleValue() {
 
         this.pfulfilled.forEach(this.c);
 
@@ -122,7 +140,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledEmitValueMultiple() {
+    public void testFulfilledHandleValueMultiple() {
 
         this.pfulfilled.forEach(this.c);
         this.pfulfilled.forEach(this.c);
@@ -131,28 +149,10 @@ public class DegenerateEmitTest {
 
     }
 
-    @Test
-    public void testFulfilledNotHandled() {
-
-        this.pfulfilled.on(Throwable.class, this.c);
-
-        verify(this.c, never()).accept(any());
-
-    }
-
     @Test(expected = NullPointerException.class)
     public void testFulfilledNullConsumerIllegal() {
 
         this.pfulfilled.forEach(null);
-
-    }
-
-    @Test
-    public void testFulfilledNullEmit() {
-
-        Promise.of(null).forEach(this.c);
-
-        verify(this.c).accept(null);
 
     }
 
