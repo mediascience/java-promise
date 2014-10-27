@@ -28,454 +28,454 @@ import com.msiops.ground.promise.Promise;
 
 public class UsageTest {
 
-	@Test(expected = IllegalStateException.class)
-	public void testAsyncBreakBrokenFails() {
-		final Async<Object> a = new Async<>();
-		a.succeed(new RuntimeException());
-		a.succeed(new RuntimeException());
-	}
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncBreakBrokenFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(new RuntimeException());
+        a.succeed(new RuntimeException());
+    }
 
-	@Test(expected = IllegalStateException.class)
-	public void testAsyncBreakFulfilledFails() {
-		final Async<Object> a = new Async<>();
-		a.succeed(25);
-		a.succeed(new RuntimeException());
-	}
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncBreakFulfilledFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(25);
+        a.succeed(new RuntimeException());
+    }
 
-	@Test
-	public void testAsyncBroken() {
+    @Test
+    public void testAsyncBroken() {
 
-		final Async<?> a = new Async<Object>();
-		final Promise<?> p = a.promise();
+        final Async<?> a = new Async<Object>();
+        final Promise<?> p = a.promise();
 
-		final Exception expected = new Exception();
-		a.fail(expected);
+        final Exception expected = new Exception();
+        a.fail(expected);
 
-		checkBroken(p, expected);
+        checkBroken(p, expected);
 
-	}
+    }
 
-	@Test
-	public void testAsyncDeferredError() {
+    @Test
+    public void testAsyncBrokenFlatMap() {
 
-		final Async<Object> a = new Async<>();
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise().flatMap(i -> Promise.of(2 * i));
 
-		final AtomicReference<Object> emitted = new AtomicReference<>();
+        final Exception expected = new Exception();
+        a.fail(expected);
 
-		a.promise().on(Throwable.class, x -> {
-			emitted.set(x);
-		});
+        checkBroken(p, expected);
 
-		final Exception expected = new Exception();
-		a.fail(expected);
+    }
 
-		assertEquals(expected, emitted.get());
+    @Test
+    public void testAsyncDeferredError() {
 
-	}
+        final Async<Object> a = new Async<>();
 
-	@Test
-	public void testAsyncDeferredErrorDoesNotEmitValue() {
+        final AtomicReference<Object> emitted = new AtomicReference<>();
 
-		final Async<Object> a = new Async<>();
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(x);
+        });
 
-		final AtomicBoolean emitted = new AtomicBoolean();
+        final Exception expected = new Exception();
+        a.fail(expected);
 
-		a.promise().forEach(o -> {
-			emitted.set(true);
-		});
+        assertEquals(expected, emitted.get());
 
-		final Exception expected = new Exception();
-		a.fail(expected);
+    }
 
-		assertFalse(emitted.get());
+    @Test
+    public void testAsyncDeferredErrorDoesNotEmitValue() {
 
-	}
+        final Async<Object> a = new Async<>();
 
-	@Test
-	public void testAsyncDeferredErrorMulti() {
+        final AtomicBoolean emitted = new AtomicBoolean();
 
-		final Async<Object> a = new Async<>();
+        a.promise().forEach(o -> {
+            emitted.set(true);
+        });
 
-		final AtomicReference<Object> emitted1 = new AtomicReference<>();
-		final AtomicReference<Object> emitted2 = new AtomicReference<>();
+        final Exception expected = new Exception();
+        a.fail(expected);
 
-		a.promise().on(Throwable.class, x -> {
-			emitted1.set(x);
-		});
-		a.promise().on(Throwable.class, x -> {
-			emitted2.set(x);
-		});
+        assertFalse(emitted.get());
 
-		assertNull(emitted1.get());
-		assertNull(emitted2.get());
+    }
 
-		final Exception expected = new Exception();
-		a.fail(expected);
+    @Test
+    public void testAsyncDeferredErrorMulti() {
 
-		assertEquals(expected, emitted1.get());
-		assertEquals(expected, emitted2.get());
+        final Async<Object> a = new Async<>();
 
-	}
+        final AtomicReference<Object> emitted1 = new AtomicReference<>();
+        final AtomicReference<Object> emitted2 = new AtomicReference<>();
 
-	@Test
-	public void testAsyncDeferredValue() {
+        a.promise().on(Throwable.class, x -> {
+            emitted1.set(x);
+        });
+        a.promise().on(Throwable.class, x -> {
+            emitted2.set(x);
+        });
 
-		final Async<Object> a = new Async<>();
+        assertNull(emitted1.get());
+        assertNull(emitted2.get());
 
-		final AtomicReference<Object> emitted = new AtomicReference<>();
+        final Exception expected = new Exception();
+        a.fail(expected);
 
-		a.promise().forEach(o -> {
-			emitted.set(o);
-		});
+        assertEquals(expected, emitted1.get());
+        assertEquals(expected, emitted2.get());
 
-		final Object expected = new Object();
-		a.succeed(expected);
+    }
 
-		assertEquals(expected, emitted.get());
+    @Test
+    public void testAsyncDeferredValue() {
 
-	}
+        final Async<Object> a = new Async<>();
 
-	@Test
-	public void testAsyncDeferredValueDoesNotEmitError() {
+        final AtomicReference<Object> emitted = new AtomicReference<>();
 
-		final Async<Object> a = new Async<>();
+        a.promise().forEach(o -> {
+            emitted.set(o);
+        });
 
-		final AtomicBoolean emitted = new AtomicBoolean();
+        final Object expected = new Object();
+        a.succeed(expected);
 
-		a.promise().on(Throwable.class, x -> {
-			emitted.set(true);
-		});
+        assertEquals(expected, emitted.get());
 
-		final Object expected = new Object();
-		a.succeed(expected);
+    }
 
-		assertFalse(emitted.get());
+    @Test
+    public void testAsyncDeferredValueDoesNotEmitError() {
 
-	}
+        final Async<Object> a = new Async<>();
 
-	@Test
-	public void testAsyncDeferredValueMulti() {
+        final AtomicBoolean emitted = new AtomicBoolean();
 
-		final Async<Object> a = new Async<>();
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(true);
+        });
 
-		final AtomicReference<Object> emitted1 = new AtomicReference<>();
-		final AtomicReference<Object> emitted2 = new AtomicReference<>();
+        final Object expected = new Object();
+        a.succeed(expected);
 
-		a.promise().forEach(o -> {
-			emitted1.set(o);
-		});
-		a.promise().forEach(o -> {
-			emitted2.set(o);
-		});
+        assertFalse(emitted.get());
 
-		assertNull(emitted1.get());
-		assertNull(emitted2.get());
+    }
 
-		final Object expected = new Object();
-		a.succeed(expected);
+    @Test
+    public void testAsyncDeferredValueMulti() {
 
-		assertEquals(expected, emitted1.get());
-		assertEquals(expected, emitted2.get());
+        final Async<Object> a = new Async<>();
 
-	}
+        final AtomicReference<Object> emitted1 = new AtomicReference<>();
+        final AtomicReference<Object> emitted2 = new AtomicReference<>();
 
-	@Test(expected = NullPointerException.class)
-	public void testAsyncFailNullIllegal() {
+        a.promise().forEach(o -> {
+            emitted1.set(o);
+        });
+        a.promise().forEach(o -> {
+            emitted2.set(o);
+        });
 
-		new Async<Object>().fail(null);
+        assertNull(emitted1.get());
+        assertNull(emitted2.get());
 
-	}
+        final Object expected = new Object();
+        a.succeed(expected);
 
-	@Test(expected = IllegalStateException.class)
-	public void testAsyncFulfillBrokenFails() {
-		final Async<Object> a = new Async<>();
-		a.succeed(new RuntimeException());
-		a.succeed(25);
-	}
+        assertEquals(expected, emitted1.get());
+        assertEquals(expected, emitted2.get());
 
-	@Test
-	public void testAsyncFulfilled() {
+    }
 
-		final Async<Integer> a = new Async<>();
-		final Promise<Integer> p = a.promise();
+    @Test(expected = NullPointerException.class)
+    public void testAsyncFailNullIllegal() {
 
-		a.succeed(12);
+        new Async<Object>().fail(null);
 
-		checkFulfilled(p, 12);
+    }
 
-	}
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncFulfillBrokenFails() {
+        final Async<Object> a = new Async<>();
+        a.succeed(new RuntimeException());
+        a.succeed(25);
+    }
 
-	@Test(expected = IllegalStateException.class)
-	public void testAsyncFulfillFulfilledFails() {
+    @Test
+    public void testAsyncFulfilled() {
 
-		final Async<Object> a = new Async<>();
-		a.succeed(15);
-		a.succeed(25);
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
 
-	}
+        a.succeed(12);
 
-	@Test
-	public void testAsyncIncompleteDoesNotEmitErrorImmediately() {
+        checkFulfilled(p, 12);
 
-		final Async<Object> a = new Async<>();
+    }
 
-		final AtomicBoolean emitted = new AtomicBoolean();
+    @Test
+    public void testAsyncFulfilledFlatMap() {
 
-		a.promise().on(Throwable.class, x -> {
-			emitted.set(true);
-		});
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise().flatMap(i -> Promise.of(2 * i));
 
-		assertFalse(emitted.get());
+        a.succeed(12);
 
-	}
+        checkFulfilled(p, 24);
 
-	@Test
-	public void testAsyncIncompleteDoesNotEmitValueImmediately() {
+    }
 
-		final Async<Object> a = new Async<>();
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncFulfillFulfilledFails() {
 
-		final AtomicBoolean emitted = new AtomicBoolean();
+        final Async<Object> a = new Async<>();
+        a.succeed(15);
+        a.succeed(25);
 
-		a.promise().forEach(o -> {
-			emitted.set(true);
-		});
+    }
 
-		assertFalse(emitted.get());
+    @Test
+    public void testAsyncIncompleteDoesNotEmitErrorImmediately() {
 
-	}
+        final Async<Object> a = new Async<>();
 
-	@Test
-	public void testDegenerateBroken() {
+        final AtomicBoolean emitted = new AtomicBoolean();
 
-		final Exception expected = new Exception();
+        a.promise().on(Throwable.class, x -> {
+            emitted.set(true);
+        });
 
-		final Promise<Integer> p = Promise.broken(expected);
+        assertFalse(emitted.get());
 
-		checkBroken(p, expected);
-	}
+    }
 
-	@Test
-	public void testDegenerateBrokenDoesNotEmitValue() {
+    @Test
+    public void testAsyncIncompleteDoesNotEmitValueImmediately() {
 
-		final Promise<?> p = Promise.broken(new Exception());
+        final Async<Object> a = new Async<>();
 
-		final AtomicBoolean actual = new AtomicBoolean();
-		p.forEach(o -> {
-			actual.set(true);
-		});
-		assertFalse(actual.get());
+        final AtomicBoolean emitted = new AtomicBoolean();
 
-	}
+        a.promise().forEach(o -> {
+            emitted.set(true);
+        });
 
-	@Test(expected = NullPointerException.class)
-	public void testDegenerateBrokenNullInvalid() {
+        assertFalse(emitted.get());
 
-		Promise.broken(null);
+    }
 
-	}
+    @Test
+    public void testAsyncMap() {
 
-	@Test
-	public void testDegenerateBrokenSelectException() {
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
 
-		final Exception expected = new Exception();
-		final Promise<Integer> p = Promise.broken(expected);
+        final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
 
-		final AtomicReference<Object> e = new AtomicReference<>();
-		final AtomicReference<Object> rte = new AtomicReference<>();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        m.forEach(o -> actual.set(o));
 
-		p.on(Exception.class, x -> {
-			e.set(x);
-		});
+        assertNull(actual.get());
 
-		p.on(RuntimeException.class, x -> {
-			rte.set(x);
-		});
+        a.succeed(12);
 
-		assertEquals(expected, e.get());
-		assertNull(rte.get());
+        assertEquals("24", actual.get());
 
-	}
+    }
 
-	@Test
-	public void testDegenerateBrokenThrowsHandlerExceptions() {
+    @Test
+    public void testDegenerateBroken() {
 
-		final Promise<Integer> p = Promise.broken(new Exception());
+        final Exception expected = new Exception();
 
-		try {
-			p.on(Exception.class, x -> {
-				throw new RuntimeException();
-			});
-			fail("should throw");
-		} catch (final RuntimeException x) {
-			// OK
-		}
-	}
+        final Promise<Integer> p = Promise.broken(expected);
 
-	@Test
-	public void testDegenerateFulfilled() {
+        checkBroken(p, expected);
+    }
 
-		final Promise<Integer> p = Promise.of(12);
+    @Test
+    public void testDegenerateBrokenDoesNotEmitValue() {
 
-		checkFulfilled(p, 12);
+        final Promise<?> p = Promise.broken(new Exception());
 
-	}
+        final AtomicBoolean actual = new AtomicBoolean();
+        p.forEach(o -> {
+            actual.set(true);
+        });
+        assertFalse(actual.get());
 
-	@Test
-	public void testDegenerateFulfilledDoesNotEmitError() {
+    }
 
-		final Promise<?> p = Promise.of(12);
+    @Test
+    public void testDegenerateBrokenFlatMap() {
 
-		final AtomicBoolean actual = new AtomicBoolean();
-		p.on(Throwable.class, x -> {
-			actual.set(true);
-		});
+        final Exception expected = new Exception();
+        final Promise<Integer> p = Promise.<Integer> broken(expected).flatMap(
+                i -> Promise.of(2 * i));
 
-		assertFalse(actual.get());
+        checkBroken(p, expected);
 
-	}
+    }
 
-	@Test
-	public void testDegenerateFulfilledNull() {
+    @Test
+    public void testDegenerateBrokenMap() {
 
-		final Promise<?> p = Promise.of(null);
+        final Exception expected = new Exception();
+        final Promise<?> p = Promise.<Integer> broken(expected).map(i -> 2 * i)
+                .map(String::valueOf);
 
-		checkFulfilled(p, null);
+        checkBroken(p, expected);
 
-	}
+    }
 
-	@Test
-	public void testDegenerateFulfilledThrowsHandlerExceptions() {
+    @Test(expected = NullPointerException.class)
+    public void testDegenerateBrokenNullInvalid() {
 
-		final Promise<Integer> p = Promise.of(12);
+        Promise.broken(null);
 
-		try {
-			p.forEach(i -> {
-				throw new RuntimeException();
-			});
-			fail("should throw");
-		} catch (final RuntimeException x) {
-			// OK
-		}
+    }
 
-	}
+    @Test
+    public void testDegenerateBrokenSelectException() {
 
-	@Test
-	public void testDegenerateFulfilledMap() {
+        final Exception expected = new Exception();
+        final Promise<Integer> p = Promise.broken(expected);
 
-		final Promise<Integer> p = Promise.of(12);
+        final AtomicReference<Object> e = new AtomicReference<>();
+        final AtomicReference<Object> rte = new AtomicReference<>();
 
-		final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
+        p.on(Exception.class, x -> {
+            e.set(x);
+        });
 
-		checkFulfilled(m, "24");
+        p.on(RuntimeException.class, x -> {
+            rte.set(x);
+        });
 
-	}
-	
-	
-	@Test public void testDegenerateBrokenMap() {
-		
-		final Exception expected = new Exception();
-		final Promise<?> p = Promise.<Integer>broken(expected).map(i -> 2 * i).map(String::valueOf);
-		
-		checkBroken(p, expected);
-		
-		
-	}
+        assertEquals(expected, e.get());
+        assertNull(rte.get());
 
-	@Test
-	public void testDegenerateFulfilledFlatMap() {
+    }
 
-		final Promise<Integer> p = Promise.of(12);
+    @Test
+    public void testDegenerateBrokenThrowsHandlerExceptions() {
 
-		final Promise<Integer> m = p.flatMap(i -> Promise.of(2 * i));
+        final Promise<Integer> p = Promise.broken(new Exception());
 
-		checkFulfilled(m, 24);
+        try {
+            p.on(Exception.class, x -> {
+                throw new RuntimeException();
+            });
+            fail("should throw");
+        } catch (final RuntimeException x) {
+            // OK
+        }
+    }
 
-	}
+    @Test
+    public void testDegenerateFulfilled() {
 
-	@Test
-	public void testDegenerateBrokenFlatMap() {
+        final Promise<Integer> p = Promise.of(12);
 
-		final Exception expected = new Exception();
-		final Promise<Integer> p = Promise.<Integer> broken(expected).flatMap(
-				i -> Promise.of(2 * i));
+        checkFulfilled(p, 12);
 
-		checkBroken(p, expected);
+    }
 
-	}
+    @Test
+    public void testDegenerateFulfilledDoesNotEmitError() {
 
-	@Test
-	public void testAsyncBrokenFlatMap() {
+        final Promise<?> p = Promise.of(12);
 
-		final Async<Integer> a = new Async<>();
-		final Promise<Integer> p = a.promise().flatMap(i -> Promise.of(2 * i));
+        final AtomicBoolean actual = new AtomicBoolean();
+        p.on(Throwable.class, x -> {
+            actual.set(true);
+        });
 
-		final Exception expected = new Exception();
-		a.fail(expected);
+        assertFalse(actual.get());
 
-		checkBroken(p, expected);
+    }
 
-	}
+    @Test
+    public void testDegenerateFulfilledFlatMap() {
 
-	@Test
-	public void testAsyncFulfilledFlatMap() {
+        final Promise<Integer> p = Promise.of(12);
 
-		final Async<Integer> a = new Async<>();
-		final Promise<Integer> p = a.promise().flatMap(i -> Promise.of(2 * i));
+        final Promise<Integer> m = p.flatMap(i -> Promise.of(2 * i));
 
-		a.succeed(12);
+        checkFulfilled(m, 24);
 
-		checkFulfilled(p, 24);
+    }
 
-	}
+    @Test
+    public void testDegenerateFulfilledMap() {
 
-	@Test
-	public void testAsyncMap() {
+        final Promise<Integer> p = Promise.of(12);
 
-		final Async<Integer> a = new Async<>();
-		final Promise<Integer> p = a.promise();
+        final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
 
-		final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
+        checkFulfilled(m, "24");
 
-		final AtomicReference<Object> actual = new AtomicReference<>();
-		m.forEach(o -> actual.set(o));
+    }
 
-		assertNull(actual.get());
+    @Test
+    public void testDegenerateFulfilledNull() {
 
-		a.succeed(12);
+        final Promise<?> p = Promise.of(null);
 
-		assertEquals("24", actual.get());
+        checkFulfilled(p, null);
 
-	}
+    }
 
-	private void checkBroken(final Promise<?> p, final Throwable expected) {
+    @Test
+    public void testDegenerateFulfilledThrowsHandlerExceptions() {
 
-		final AtomicReference<Object> actual = new AtomicReference<>();
+        final Promise<Integer> p = Promise.of(12);
 
-		p.on(Throwable.class, x -> {
-			actual.set(x);
-		});
+        try {
+            p.forEach(i -> {
+                throw new RuntimeException();
+            });
+            fail("should throw");
+        } catch (final RuntimeException x) {
+            // OK
+        }
 
-		assertEquals(expected, actual.get());
+    }
 
-	}
+    private void checkBroken(final Promise<?> p, final Throwable expected) {
 
-	private void checkFulfilled(final Promise<?> p, final Object expected) {
+        final AtomicReference<Object> actual = new AtomicReference<>();
 
-		final AtomicReference<Object> actual = new AtomicReference<>();
-		/*
-		 * needed because fulfilled value may be null so we need to distinguish
-		 * between fulfilled null and not being called at all.
-		 */
-		final AtomicBoolean set = new AtomicBoolean();
+        p.on(Throwable.class, x -> {
+            actual.set(x);
+        });
 
-		p.forEach(o -> {
-			actual.set(o);
-			set.set(true);
-		});
+        assertEquals(expected, actual.get());
 
-		assertTrue(set.get());
-		assertEquals(expected, actual.get());
+    }
 
-	}
+    private void checkFulfilled(final Promise<?> p, final Object expected) {
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        /*
+         * needed because fulfilled value may be null so we need to distinguish
+         * between fulfilled null and not being called at all.
+         */
+        final AtomicBoolean set = new AtomicBoolean();
+
+        p.forEach(o -> {
+            actual.set(o);
+            set.set(true);
+        });
+
+        assertTrue(set.get());
+        assertEquals(expected, actual.get());
+
+    }
 
 }

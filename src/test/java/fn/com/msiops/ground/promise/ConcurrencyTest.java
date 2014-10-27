@@ -31,86 +31,6 @@ import com.msiops.ground.promise.Promise;
 public class ConcurrencyTest {
 
     @Test
-    public void testManyValueEmits() {
-
-        final int breadsz = 50;
-
-        final ExecutorService exec = Executors.newCachedThreadPool();
-        final CountDownLatch start = new CountDownLatch(1);
-        final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
-
-        final Object expected = new Object();
-        final Async<Object> a = new Async<>();
-        final Promise<Object> p = a.promise();
-
-        final AtomicInteger emitted = new AtomicInteger();
-
-        for (int i = 0; i < breadsz; i = i + 1) {
-            exec.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        start.await();
-                        p.forEach(o -> {
-                            if (expected.equals(o)) {
-                                emitted.incrementAndGet();
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        end.countDown();
-                    }
-                }
-            });
-        }
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    start.await();
-                    a.succeed(expected);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    end.countDown();
-                }
-            }
-        });
-        for (int i = 0; i < breadsz; i = i + 1) {
-            exec.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        start.await();
-                        p.forEach(o -> {
-                            if (expected.equals(o)) {
-                                emitted.incrementAndGet();
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        end.countDown();
-                    }
-                }
-            });
-        }
-
-        start.countDown();
-        try {
-            end.await();
-            assertEquals(breadsz * 2, emitted.get());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            fail("did not finish");
-        } finally {
-            exec.shutdownNow();
-        }
-
-    }
-
-    @Test
     public void testManyErrorEmits() {
 
         final int breadsz = 50;
@@ -136,7 +56,7 @@ public class ConcurrencyTest {
                                 emitted.incrementAndGet();
                             }
                         });
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                     } finally {
                         end.countDown();
@@ -150,7 +70,7 @@ public class ConcurrencyTest {
                 try {
                     start.await();
                     a.fail(expected);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } finally {
                     end.countDown();
@@ -168,7 +88,7 @@ public class ConcurrencyTest {
                                 emitted.incrementAndGet();
                             }
                         });
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                     } finally {
                         end.countDown();
@@ -181,7 +101,7 @@ public class ConcurrencyTest {
         try {
             end.await();
             assertEquals(breadsz * 2, emitted.get());
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             fail("did not finish");
         } finally {
@@ -190,84 +110,164 @@ public class ConcurrencyTest {
 
     }
 
-	@Test
-	public void testManyValueMaps() {
-	
-	    final int breadsz = 50;
-	
-	    final ExecutorService exec = Executors.newCachedThreadPool();
-	    final CountDownLatch start = new CountDownLatch(1);
-	    final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
-	
-	    final Object expected = 24;
-	    final Async<Integer> a = new Async<>();
-	    final Promise<Integer> p = a.promise();
-	
-	    final AtomicInteger emitted = new AtomicInteger();
-	
-	    for (int i = 0; i < breadsz; i = i + 1) {
-	        exec.execute(new Runnable() {
-	            @Override
-	            public void run() {
-	                try {
-	                    start.await();
-	                    p.map(n -> 2 * n).forEach(o -> {
-	                        if (expected.equals(o)) {
-	                            emitted.incrementAndGet();
-	                        }
-	                    });
-	                } catch (InterruptedException e) {
-	                    Thread.currentThread().interrupt();
-	                } finally {
-	                    end.countDown();
-	                }
-	            }
-	        });
-	    }
-	    exec.execute(new Runnable() {
-	        @Override
-	        public void run() {
-	            try {
-	                start.await();
-	                a.succeed(12);
-	            } catch (InterruptedException e) {
-	                Thread.currentThread().interrupt();
-	            } finally {
-	                end.countDown();
-	            }
-	        }
-	    });
-	    for (int i = 0; i < breadsz; i = i + 1) {
-	        exec.execute(new Runnable() {
-	            @Override
-	            public void run() {
-	                try {
-	                    start.await();
-	                    p.map(n -> 2 * n).forEach(o -> {
-	                        if (expected.equals(o)) {
-	                            emitted.incrementAndGet();
-	                        }
-	                    });
-	                } catch (InterruptedException e) {
-	                    Thread.currentThread().interrupt();
-	                } finally {
-	                    end.countDown();
-	                }
-	            }
-	        });
-	    }
-	
-	    start.countDown();
-	    try {
-	        end.await();
-	        assertEquals(breadsz * 2, emitted.get());
-	    } catch (InterruptedException e) {
-	        Thread.currentThread().interrupt();
-	        fail("did not finish");
-	    } finally {
-	        exec.shutdownNow();
-	    }
-	
-	}
+    @Test
+    public void testManyValueEmits() {
+
+        final int breadsz = 50;
+
+        final ExecutorService exec = Executors.newCachedThreadPool();
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
+
+        final Object expected = new Object();
+        final Async<Object> a = new Async<>();
+        final Promise<Object> p = a.promise();
+
+        final AtomicInteger emitted = new AtomicInteger();
+
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        p.forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    start.await();
+                    a.succeed(expected);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    end.countDown();
+                }
+            }
+        });
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        p.forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+
+        start.countDown();
+        try {
+            end.await();
+            assertEquals(breadsz * 2, emitted.get());
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("did not finish");
+        } finally {
+            exec.shutdownNow();
+        }
+
+    }
+
+    @Test
+    public void testManyValueMaps() {
+
+        final int breadsz = 50;
+
+        final ExecutorService exec = Executors.newCachedThreadPool();
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
+
+        final Object expected = 24;
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
+
+        final AtomicInteger emitted = new AtomicInteger();
+
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        p.map(n -> 2 * n).forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    start.await();
+                    a.succeed(12);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    end.countDown();
+                }
+            }
+        });
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        p.map(n -> 2 * n).forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+
+        start.countDown();
+        try {
+            end.await();
+            assertEquals(breadsz * 2, emitted.get());
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("did not finish");
+        } finally {
+            exec.shutdownNow();
+        }
+
+    }
 
 }
