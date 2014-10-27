@@ -57,19 +57,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testAsyncBroken() {
-
-        final Async<?> a = new Async<Object>();
-        final Promise<?> p = a.promise();
-
-        final Exception expected = new Exception();
-        a.fail(expected);
-
-        checkBroken(p, expected);
-
-    }
-
-    @Test
     public void testAsyncBrokenDefer() {
 
         final Async<Integer> a = new Async<>();
@@ -167,130 +154,6 @@ public class UsageTest {
         checkFulfilled(p, "Hi.");
     }
 
-    @Test
-    public void testAsyncDeferredError() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicReference<Object> emitted = new AtomicReference<>();
-
-        a.promise().on(Throwable.class, x -> {
-            emitted.set(x);
-        });
-
-        final Exception expected = new Exception();
-        a.fail(expected);
-
-        assertEquals(expected, emitted.get());
-
-    }
-
-    @Test
-    public void testAsyncDeferredErrorDoesNotEmitValue() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicBoolean emitted = new AtomicBoolean();
-
-        a.promise().forEach(o -> {
-            emitted.set(true);
-        });
-
-        final Exception expected = new Exception();
-        a.fail(expected);
-
-        assertFalse(emitted.get());
-
-    }
-
-    @Test
-    public void testAsyncDeferredErrorMulti() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicReference<Object> emitted1 = new AtomicReference<>();
-        final AtomicReference<Object> emitted2 = new AtomicReference<>();
-
-        a.promise().on(Throwable.class, x -> {
-            emitted1.set(x);
-        });
-        a.promise().on(Throwable.class, x -> {
-            emitted2.set(x);
-        });
-
-        assertNull(emitted1.get());
-        assertNull(emitted2.get());
-
-        final Exception expected = new Exception();
-        a.fail(expected);
-
-        assertEquals(expected, emitted1.get());
-        assertEquals(expected, emitted2.get());
-
-    }
-
-    @Test
-    public void testAsyncDeferredValue() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicReference<Object> emitted = new AtomicReference<>();
-
-        a.promise().forEach(o -> {
-            emitted.set(o);
-        });
-
-        final Object expected = new Object();
-        a.succeed(expected);
-
-        assertEquals(expected, emitted.get());
-
-    }
-
-    @Test
-    public void testAsyncDeferredValueDoesNotEmitError() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicBoolean emitted = new AtomicBoolean();
-
-        a.promise().on(Throwable.class, x -> {
-            emitted.set(true);
-        });
-
-        final Object expected = new Object();
-        a.succeed(expected);
-
-        assertFalse(emitted.get());
-
-    }
-
-    @Test
-    public void testAsyncDeferredValueMulti() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicReference<Object> emitted1 = new AtomicReference<>();
-        final AtomicReference<Object> emitted2 = new AtomicReference<>();
-
-        a.promise().forEach(o -> {
-            emitted1.set(o);
-        });
-        a.promise().forEach(o -> {
-            emitted2.set(o);
-        });
-
-        assertNull(emitted1.get());
-        assertNull(emitted2.get());
-
-        final Object expected = new Object();
-        a.succeed(expected);
-
-        assertEquals(expected, emitted1.get());
-        assertEquals(expected, emitted2.get());
-
-    }
-
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
@@ -334,18 +197,6 @@ public class UsageTest {
         final Async<Object> a = new Async<>();
         a.succeed(new RuntimeException());
         a.succeed(25);
-    }
-
-    @Test
-    public void testAsyncFulfilled() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<Integer> p = a.promise();
-
-        a.succeed(12);
-
-        checkFulfilled(p, 12);
-
     }
 
     @Test
@@ -417,36 +268,6 @@ public class UsageTest {
         final Async<Object> a = new Async<>();
         a.succeed(15);
         a.succeed(25);
-
-    }
-
-    @Test
-    public void testAsyncIncompleteDoesNotEmitErrorImmediately() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicBoolean emitted = new AtomicBoolean();
-
-        a.promise().on(Throwable.class, x -> {
-            emitted.set(true);
-        });
-
-        assertFalse(emitted.get());
-
-    }
-
-    @Test
-    public void testAsyncIncompleteDoesNotEmitValueImmediately() {
-
-        final Async<Object> a = new Async<>();
-
-        final AtomicBoolean emitted = new AtomicBoolean();
-
-        a.promise().forEach(o -> {
-            emitted.set(true);
-        });
-
-        assertFalse(emitted.get());
 
     }
 

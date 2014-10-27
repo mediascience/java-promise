@@ -184,6 +184,8 @@ public final class Promise<T> {
      */
     public void forEach(final Consumer<? super T> h) {
 
+        Objects.requireNonNull(h);
+
         final Link<T> link = new Link<T>() {
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
@@ -271,6 +273,9 @@ public final class Promise<T> {
      */
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
+
+        Objects.requireNonNull(sel);
+        Objects.requireNonNull(h);
 
         final Link<T> link = new Link<T>() {
             @Override
