@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class Promise<T> {
 
@@ -79,6 +80,46 @@ public final class Promise<T> {
     }
 
     /**
+     * Transform the value. Produces a new promise that will be fulfilled
+     * independently if this promise is fulfilled. If this promise is fulfilled,
+     * a new promise is produced and placed upstream of the returned promise. If
+     * this promise is broken, the returned promise is broken immediately and
+     * the mapping function is not invoked.
+     * 
+     * @param <R> produced promise's value type.
+     * 
+     * @param mf
+     *            mapping function
+     * 
+     * @return new promise of the transformed value.
+     * 
+     */
+    public <R> Promise<R> flatMap(
+            final Function<? super T, Promise<? extends R>> mf) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                if (x == null) {
+                    final Promise<? extends R> upstream = mf.apply(value);
+                    upstream.forEach(rval::succeed);
+                    upstream.on(Throwable.class, rval::fail);
+                } else {
+                    rval.fail(x);
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+
+    }
+
+    /**
      * <p>
      * Emit the value of this promise. If the promise is fulfilled when this is
      * invoked, the handler is invoked immediately with the value. If this
@@ -119,6 +160,40 @@ public final class Promise<T> {
         };
 
         dispatch(link);
+
+    }
+
+    /**
+     * Transform the value. Produces a new promise that will be fulfilled or
+     * broken as the original.
+     * 
+     * @param <R>
+     *            the resulting promise's value type.
+     * 
+     * @param f
+     *            mapping function. This is invoked only if the original promise
+     *            is fulfilled. Must not be null.
+     * 
+     * @return promise of transformed value.
+     */
+    public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+                if (x == null) {
+                    rval.succeed(f.apply(value));
+                } else {
+                    rval.fail(x);
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
 
     }
 
