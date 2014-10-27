@@ -84,6 +84,9 @@ public final class Promise<T> {
      * Perform on completion. Produce a new promise tied to any completion
      * outcome, fulfill or break, of this promise.
      *
+     * @param <R>
+     *            returned promise's value type.
+     *
      * @param src
      *            a promise supplier. The supplier is invoked only when this
      *            promise becomes complete. The supplied promise is inserted
