@@ -133,6 +133,41 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncBrokenRecoverBroken() {
+
+        final Async<Integer> a = new Async<>();
+        final Async<String> inner = new Async<>();
+        final Promise<?> p = a.promise().recover(Throwable.class,
+                x -> inner.promise());
+
+        a.fail(new Exception());
+
+        checkNotComplete(p);
+
+        final Exception expected = new Exception();
+        inner.fail(expected);
+
+        checkBroken(p, expected);
+    }
+
+    @Test
+    public void testAsyncBrokenRecoverFulfilled() {
+
+        final Async<Integer> a = new Async<>();
+        final Async<String> inner = new Async<>();
+        final Promise<?> p = a.promise().recover(Throwable.class,
+                x -> inner.promise());
+
+        a.fail(new Exception());
+
+        checkNotComplete(p);
+
+        inner.succeed("Hi.");
+
+        checkFulfilled(p, "Hi.");
+    }
+
+    @Test
     public void testAsyncDeferredError() {
 
         final Async<Object> a = new Async<>();
@@ -635,6 +670,27 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
+
+    }
+
+    @Test
+    public void testDegenerateRecoverBroken() {
+
+        final Exception expected = new RuntimeException();
+        final Promise<?> p = Promise.broken(new Exception()).recover(
+                Throwable.class, ix -> Promise.broken(expected));
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testDegenerateRecoverFulfilled() {
+
+        final Promise<?> p = Promise.broken(new Exception()).recover(
+                Throwable.class, ix -> Promise.of(12));
+
+        checkFulfilled(p, 12);
 
     }
 

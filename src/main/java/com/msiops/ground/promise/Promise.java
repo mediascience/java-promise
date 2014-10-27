@@ -282,6 +282,50 @@ public final class Promise<T> {
 
     }
 
+    /**
+     * Recover from failure. Produces a promise tied to this promise's failure.
+     *
+     * @param <R>
+     *            returned promise's value type.
+     *
+     * @param <X>
+     *            selector token's type.
+     *
+     * @param sel
+     *            selector type token. The handler will be invoked only if the
+     *            error is compatible with this type.
+     *
+     * @param h
+     *            error handler.
+     *
+     * @return new promise to recover from failure.
+     */
+    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
+            final Function<? super X, Promise<? extends R>> h) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                if (sel.isInstance(x)) {
+                    /*
+                     * only respond to selected failure
+                     */
+                    final Promise<? extends R> upstream = h.apply(sel.cast(x));
+                    upstream.forEach(rval::succeed);
+                    upstream.on(Throwable.class, rval::fail);
+                }
+
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+    }
+
     void fail(final Throwable x) {
 
         complete(null, Objects.requireNonNull(x));
