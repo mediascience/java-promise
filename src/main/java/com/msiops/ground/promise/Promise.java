@@ -282,6 +282,24 @@ public final class Promise<T> {
 
     }
 
+    /**
+     * Recover from failure. Produces a promise tied to this promise's failure.
+     *
+     * @param <R>
+     *            returned promise's value type.
+     *
+     * @param <X>
+     *            selector token's type.
+     *
+     * @param sel
+     *            selector type token. The handler will be invoked only if the
+     *            error is compatible with this type.
+     *
+     * @param h
+     *            error handler.
+     *
+     * @return new promise to recover from failure.
+     */
     public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
             final Function<? super X, Promise<? extends R>> h) {
 
