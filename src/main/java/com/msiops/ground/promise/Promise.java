@@ -282,6 +282,32 @@ public final class Promise<T> {
 
     }
 
+    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
+            final Function<? super X, Promise<? extends R>> h) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                if (sel.isInstance(x)) {
+                    /*
+                     * only respond to selected failure
+                     */
+                    final Promise<? extends R> upstream = h.apply(sel.cast(x));
+                    upstream.forEach(rval::succeed);
+                    upstream.on(Throwable.class, rval::fail);
+                }
+
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+    }
+
     void fail(final Throwable x) {
 
         complete(null, Objects.requireNonNull(x));

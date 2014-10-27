@@ -638,6 +638,27 @@ public class UsageTest {
 
     }
 
+    @Test
+    public void testDegenerateRecoverBroken() {
+
+        final Exception expected = new RuntimeException();
+        final Promise<?> p = Promise.broken(new Exception()).recover(
+                Throwable.class, ix -> Promise.broken(expected));
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testDegenerateRecoverFulfilled() {
+
+        final Promise<?> p = Promise.broken(new Exception()).recover(
+                Throwable.class, ix -> Promise.of(12));
+
+        checkFulfilled(p, 12);
+
+    }
+
     private void checkBroken(final Promise<?> p, final Throwable expected) {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
