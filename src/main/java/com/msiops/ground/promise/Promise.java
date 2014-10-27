@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class Promise<T> {
 
@@ -79,20 +80,44 @@ public final class Promise<T> {
 
     }
 
+    public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                final Promise<? extends R> upstream = src.get();
+                /*
+                 * don't care about success or failure
+                 */
+                upstream.forEach(rval::succeed);
+                upstream.on(Throwable.class, rval::fail);
+
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+    }
+
     /**
      * Transform the value. Produces a new promise that will be fulfilled
      * independently if this promise is fulfilled. If this promise is fulfilled,
      * a new promise is produced and placed upstream of the returned promise. If
      * this promise is broken, the returned promise is broken immediately and
      * the mapping function is not invoked.
-     * 
-     * @param <R> produced promise's value type.
-     * 
+     *
+     * @param <R>
+     *            produced promise's value type.
+     *
      * @param mf
      *            mapping function
-     * 
+     *
      * @return new promise of the transformed value.
-     * 
+     *
      */
     public <R> Promise<R> flatMap(
             final Function<? super T, Promise<? extends R>> mf) {
@@ -166,14 +191,14 @@ public final class Promise<T> {
     /**
      * Transform the value. Produces a new promise that will be fulfilled or
      * broken as the original.
-     * 
+     *
      * @param <R>
      *            the resulting promise's value type.
-     * 
+     *
      * @param f
      *            mapping function. This is invoked only if the original promise
      *            is fulfilled. Must not be null.
-     * 
+     *
      * @return promise of transformed value.
      */
     public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
