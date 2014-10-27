@@ -28,6 +28,20 @@ import com.msiops.ground.promise.Promise;
 
 public class UsageTest {
 
+    @Test
+    public void testAsyncBokenMap() {
+
+        final Async<Integer> a = new Async<>();
+        final Promise<?> p = a.promise().map(i -> 2 * i);
+
+        final Exception expected = new Exception();
+
+        a.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakBrokenFails() {
         final Async<Object> a = new Async<>();
