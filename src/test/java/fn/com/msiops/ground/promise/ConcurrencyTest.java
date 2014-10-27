@@ -339,6 +339,121 @@ public class ConcurrencyTest {
     }
 
     @Test
+    public void testManyRecoveries() {
+
+        final int breadsz = 50;
+
+        final ExecutorService exec = Executors.newCachedThreadPool();
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
+
+        final String expected = "HI";
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
+
+        final AtomicInteger emitted = new AtomicInteger();
+
+        final Function<Throwable, Promise<String>> h = new Function<Throwable, Promise<String>>() {
+            @Override
+            public Promise<String> apply(final Throwable x) {
+                final Async<String> inner = new Async<>();
+                exec.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(100);
+                            inner.succeed(expected);
+                        } catch (final InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } finally {
+                            end.countDown();
+                        }
+                    }
+                });
+                return inner.promise();
+            }
+        };
+
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        /*
+                         * should be able to use h directly but eclipse won't
+                         * let me. so doing this hacky workaround. Note that if
+                         * use mf as the argument directly, javac has no trouble
+                         * with it
+                         */
+                        p.recover(Throwable.class, x -> h.apply(x)).forEach(
+                                o -> {
+                                    if (expected.equals(o)) {
+                                        emitted.incrementAndGet();
+                                    }
+                                });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    start.await();
+                    a.fail(new Exception());
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    end.countDown();
+                }
+            }
+        });
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        /*
+                         * should be able to use h directly but eclipse won't
+                         * let me. so doing this hacky workaround. Note that if
+                         * use mf as the argument directly, javac has no trouble
+                         * with it
+                         */
+                        p.recover(Throwable.class, x -> h.apply(x)).forEach(
+                                o -> {
+                                    if (expected.equals(o)) {
+                                        emitted.incrementAndGet();
+                                    }
+                                });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+
+        start.countDown();
+        try {
+            end.await();
+            assertEquals(breadsz * 2, emitted.get());
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("did not finish");
+        } finally {
+            exec.shutdownNow();
+        }
+
+    }
+
+    @Test
     public void testManyValueEmits() {
 
         final int breadsz = 50;
