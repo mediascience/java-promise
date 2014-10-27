@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.junit.Test;
 
@@ -30,6 +31,119 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 
 public class ConcurrencyTest {
+
+    @Test
+    public void testManyDefers() {
+
+        final int breadsz = 50;
+
+        final ExecutorService exec = Executors.newCachedThreadPool();
+        final CountDownLatch start = new CountDownLatch(1);
+        final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
+
+        final String expected = "HI";
+        final Async<Integer> a = new Async<>();
+        final Promise<Integer> p = a.promise();
+
+        final AtomicInteger emitted = new AtomicInteger();
+
+        final Supplier<Promise<String>> src = new Supplier<Promise<String>>() {
+            @Override
+            public Promise<String> get() {
+                final Async<String> inner = new Async<>();
+                exec.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(100);
+                            inner.succeed(expected);
+                        } catch (final InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        } finally {
+                            end.countDown();
+                        }
+                    }
+                });
+                return inner.promise();
+            }
+        };
+
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        /*
+                         * should be able to use src directly but eclipse won't
+                         * let me. so doing this hacky workaround. Note that if
+                         * use mf as the argument directly, javac has no trouble
+                         * with it
+                         */
+                        p.defer(() -> src.get()).forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    start.await();
+                    a.succeed(12);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    end.countDown();
+                }
+            }
+        });
+        for (int i = 0; i < breadsz; i = i + 1) {
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        start.await();
+                        /*
+                         * should be able to use src directly but eclipse won't
+                         * let me. so doing this hacky workaround. Note that if
+                         * use mf as the argument directly, javac has no trouble
+                         * with it
+                         */
+                        p.defer(() -> src.get()).forEach(o -> {
+                            if (expected.equals(o)) {
+                                emitted.incrementAndGet();
+                            }
+                        });
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        end.countDown();
+                    }
+                }
+            });
+        }
+
+        start.countDown();
+        try {
+            end.await();
+            assertEquals(breadsz * 2, emitted.get());
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("did not finish");
+        } finally {
+            exec.shutdownNow();
+        }
+
+    }
 
     @Test
     public void testManyErrorEmits() {

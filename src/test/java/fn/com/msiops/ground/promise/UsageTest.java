@@ -70,6 +70,56 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncBrokenDefer() {
+
+        final Async<Integer> a = new Async<>();
+        final Promise<?> p = a.promise().defer(() -> Promise.of("HI"));
+
+        checkNotComplete(p);
+
+        a.fail(new Exception());
+
+        checkFulfilled(p, "HI");
+    }
+
+    @Test
+    public void testAsyncBrokenDeferBroken() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.fail(new Error());
+
+        checkNotComplete(p);
+
+        final Exception expected = new Exception();
+        inner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testAsyncBrokenDeferFulfilled() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.fail(new Exception());
+
+        checkNotComplete(p);
+
+        inner.succeed("Hi.");
+
+        checkFulfilled(p, "Hi.");
+
+    }
+
+    @Test
     public void testAsyncBrokenFlatMap() {
 
         final Async<Integer> a = new Async<>();
@@ -264,6 +314,57 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncFulfilledDefer() {
+
+        final Async<Integer> a = new Async<>();
+        final Promise<?> p = a.promise().defer(() -> Promise.of("HI"));
+
+        checkNotComplete(p);
+
+        a.succeed(12);
+
+        checkFulfilled(p, "HI");
+
+    }
+
+    @Test
+    public void testAsyncFulfilledDeferBroken() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.succeed(12);
+
+        checkNotComplete(p);
+
+        final Exception expected = new Exception();
+        inner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testAsyncFulfilledDeferFulfilled() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.succeed(12);
+
+        checkNotComplete(p);
+
+        inner.succeed("Hi.");
+
+        checkFulfilled(p, "Hi.");
+
+    }
+
+    @Test
     public void testAsyncFulfilledFlatMap() {
 
         final Async<Integer> a = new Async<>();
@@ -341,6 +442,15 @@ public class UsageTest {
         final Promise<Integer> p = Promise.broken(expected);
 
         checkBroken(p, expected);
+    }
+
+    @Test
+    public void testDegenerateBrokenDefer() {
+
+        final Promise<?> p = Promise.broken(new Exception()).defer(
+                () -> Promise.of("HI"));
+
+        checkFulfilled(p, "HI");
     }
 
     @Test
@@ -459,6 +569,15 @@ public class UsageTest {
     }
 
     @Test
+    public void testDegenerateFulfilledDefer() {
+
+        final Promise<?> p = Promise.of(12).defer(() -> Promise.of("HI"));
+
+        checkFulfilled(p, "HI");
+
+    }
+
+    @Test
     public void testDegenerateFulfilledDoesNotEmitError() {
 
         final Promise<?> p = Promise.of(12);
@@ -547,6 +666,18 @@ public class UsageTest {
 
         assertTrue(set.get());
         assertEquals(expected, actual.get());
+
+    }
+
+    private void checkNotComplete(final Promise<?> p) {
+
+        final AtomicBoolean set = new AtomicBoolean();
+
+        p.forEach(o -> {
+            set.set(true);
+        });
+
+        assertFalse(set.get());
 
     }
 
