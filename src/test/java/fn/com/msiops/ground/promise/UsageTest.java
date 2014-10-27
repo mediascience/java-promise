@@ -83,6 +83,43 @@ public class UsageTest {
     }
 
     @Test
+    public void testAsyncBrokenDeferBroken() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.fail(new Error());
+
+        checkNotComplete(p);
+
+        final Exception expected = new Exception();
+        inner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testAsyncBrokenDeferFulfilled() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.fail(new Exception());
+
+        checkNotComplete(p);
+
+        inner.succeed("Hi.");
+
+        checkFulfilled(p, "Hi.");
+
+    }
+
+    @Test
     public void testAsyncBrokenFlatMap() {
 
         final Async<Integer> a = new Async<>();
@@ -287,6 +324,43 @@ public class UsageTest {
         a.succeed(12);
 
         checkFulfilled(p, "HI");
+
+    }
+
+    @Test
+    public void testAsyncFulfilledDeferBroken() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.succeed(12);
+
+        checkNotComplete(p);
+
+        final Exception expected = new Exception();
+        inner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testAsyncFulfilledDeferFulfilled() {
+
+        final Async<Integer> outer = new Async<>();
+        final Async<String> inner = new Async<>();
+
+        final Promise<?> p = outer.promise().defer(() -> inner.promise());
+
+        outer.succeed(12);
+
+        checkNotComplete(p);
+
+        inner.succeed("Hi.");
+
+        checkFulfilled(p, "Hi.");
 
     }
 
