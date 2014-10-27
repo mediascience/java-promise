@@ -175,10 +175,12 @@ public final class Promise<T> {
      *
      *
      * @param h
-     *            value handler. Must not be null.
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
      *
      * @throws NullPointerException
-     *             if the handler is null.
+     *             if the handler is null and the promise is not broken.
      */
     public void forEach(final Consumer<? super T> h) {
 
@@ -259,10 +261,13 @@ public final class Promise<T> {
      *            error is an instance of this type.
      *
      * @param h
-     *            value handler. Must not be null.
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
      *
      * @throws NullPointerException
-     *             if the handler is null.
+     *             if the handler or selector is null and the promise is not
+     *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {

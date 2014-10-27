@@ -89,6 +89,20 @@ public class DegenerateEmitTest {
 
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testBrokenNullHandlerIllegal() {
+
+        this.pbroken.on(Throwable.class, null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testBrokenNullSelectorIllegal() {
+
+        this.pbroken.on(null, this.c);
+
+    }
+
     @Test
     public void testFulfilledEmitValue() {
 
@@ -114,6 +128,13 @@ public class DegenerateEmitTest {
         this.pfulfilled.on(Throwable.class, this.c);
 
         verify(this.c, never()).accept(any());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testFulfilledNullConsumerIllegal() {
+
+        this.pfulfilled.forEach(null);
 
     }
 
