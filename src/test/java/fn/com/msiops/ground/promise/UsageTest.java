@@ -213,6 +213,37 @@ public class UsageTest {
 
     }
 
+    @Test
+    public void testAsyncFlatMapFulfilledBroken() {
+
+        final Async<Integer> aouter = new Async<>();
+        final Async<String> ainner = new Async<>();
+
+        final Promise<?> p = aouter.promise().flatMap(i -> ainner.promise());
+
+        final Exception expected = new Exception();
+
+        aouter.succeed(7);
+        ainner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testAsyncFlatMapFulfilledFulfilled() {
+
+        final Async<Integer> aouter = new Async<>();
+        final Async<String> ainner = new Async<>();
+
+        final Promise<?> p = aouter.promise().flatMap(i -> ainner.promise());
+
+        aouter.succeed(7);
+        ainner.succeed("hi");
+
+        checkFulfilled(p, "hi");
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testAsyncFulfillBrokenFails() {
         final Async<Object> a = new Async<>();
@@ -389,6 +420,33 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
+    }
+
+    @Test
+    public void testDegenerateFlatMapFulfilledBroken() {
+
+        final Async<String> ainner = new Async<>();
+
+        final Promise<?> p = Promise.of(12).flatMap(i -> ainner.promise());
+
+        final Exception expected = new Exception();
+
+        ainner.fail(expected);
+
+        checkBroken(p, expected);
+
+    }
+
+    @Test
+    public void testDegenerateFlatMapFulfilledFulfilled() {
+
+        final Async<String> ainner = new Async<>();
+
+        final Promise<?> p = Promise.of(12).flatMap(i -> ainner.promise());
+
+        ainner.succeed("hi");
+
+        checkFulfilled(p, "hi");
     }
 
     @Test
