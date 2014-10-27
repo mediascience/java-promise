@@ -16,8 +16,8 @@ callbacks.
     <version>${v.promise}</version>
 </dependency>
 ```
+See [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%20%22com.msiops.ground%22%20a%3A%22ground-promise%22) for latest version.
 
-(Not yet in Maven Central)
 
 
 ## Versioning
