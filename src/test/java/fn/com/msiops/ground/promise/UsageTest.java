@@ -470,35 +470,12 @@ public class UsageTest {
     }
 
     @Test
-    public void testDegenerateBroken() {
-
-        final Exception expected = new Exception();
-
-        final Promise<Integer> p = Promise.broken(expected);
-
-        checkBroken(p, expected);
-    }
-
-    @Test
     public void testDegenerateBrokenDefer() {
 
         final Promise<?> p = Promise.broken(new Exception()).defer(
                 () -> Promise.of("HI"));
 
         checkFulfilled(p, "HI");
-    }
-
-    @Test
-    public void testDegenerateBrokenDoesNotEmitValue() {
-
-        final Promise<?> p = Promise.broken(new Exception());
-
-        final AtomicBoolean actual = new AtomicBoolean();
-        p.forEach(o -> {
-            actual.set(true);
-        });
-        assertFalse(actual.get());
-
     }
 
     @Test
@@ -527,28 +504,6 @@ public class UsageTest {
     public void testDegenerateBrokenNullInvalid() {
 
         Promise.broken(null);
-
-    }
-
-    @Test
-    public void testDegenerateBrokenSelectException() {
-
-        final Exception expected = new Exception();
-        final Promise<Integer> p = Promise.broken(expected);
-
-        final AtomicReference<Object> e = new AtomicReference<>();
-        final AtomicReference<Object> rte = new AtomicReference<>();
-
-        p.on(Exception.class, x -> {
-            e.set(x);
-        });
-
-        p.on(RuntimeException.class, x -> {
-            rte.set(x);
-        });
-
-        assertEquals(expected, e.get());
-        assertNull(rte.get());
 
     }
 
@@ -595,34 +550,11 @@ public class UsageTest {
     }
 
     @Test
-    public void testDegenerateFulfilled() {
-
-        final Promise<Integer> p = Promise.of(12);
-
-        checkFulfilled(p, 12);
-
-    }
-
-    @Test
     public void testDegenerateFulfilledDefer() {
 
         final Promise<?> p = Promise.of(12).defer(() -> Promise.of("HI"));
 
         checkFulfilled(p, "HI");
-
-    }
-
-    @Test
-    public void testDegenerateFulfilledDoesNotEmitError() {
-
-        final Promise<?> p = Promise.of(12);
-
-        final AtomicBoolean actual = new AtomicBoolean();
-        p.on(Throwable.class, x -> {
-            actual.set(true);
-        });
-
-        assertFalse(actual.get());
 
     }
 
@@ -645,15 +577,6 @@ public class UsageTest {
         final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
 
         checkFulfilled(m, "24");
-
-    }
-
-    @Test
-    public void testDegenerateFulfilledNull() {
-
-        final Promise<?> p = Promise.of(null);
-
-        checkFulfilled(p, null);
 
     }
 
