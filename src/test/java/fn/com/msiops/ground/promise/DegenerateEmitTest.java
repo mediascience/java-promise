@@ -53,6 +53,15 @@ public class DegenerateEmitTest {
     }
 
     @Test
+    public void testBokenDoesNotEmit() {
+
+        this.pbroken.forEach(this.c);
+
+        verify(this.c, never()).accept(any());
+
+    }
+
+    @Test
     public void testBrokenHandleError() {
 
         this.pbroken.on(Throwable.class, this.c);
