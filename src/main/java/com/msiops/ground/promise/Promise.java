@@ -80,6 +80,17 @@ public final class Promise<T> {
 
     }
 
+    /**
+     * Perform on completion. Produce a new promise tied to any completion
+     * outcome, fulfill or break, of this promise.
+     *
+     * @param src
+     *            a promise supplier. The supplier is invoked only when this
+     *            promise becomes complete. The supplied promise is inserted
+     *            upstream to the returned promise.
+     *
+     * @return promise to compute a new value when this promise complete.
+     */
     public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
 
         final Promise<R> rval = new Promise<>();
