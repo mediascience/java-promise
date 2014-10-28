@@ -62,6 +62,23 @@ p.forEach(System.out::println); // does nothing
 p.on(Throwable.class, Throwable::printStackTrace); // prints stack trace
 ```
 
+### Defer
+```java
+final Async<Object> toFulfill = new Async<>();
+final Async<Object> toBreak = new Async<>();
+
+final Supplier<Promise<String>> finalizer = () -> Promise
+        .of("Finally!");
+
+toFulfill.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+toBreak.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+
+toFulfill.succeed(109); // prints Finally!
+toBreak.fail(new Exception()); // prints Finally!
+```
+
 ## Versioning
 
 Releases in the 0.x series are the Wild West. Anything can change between

@@ -16,6 +16,8 @@
  */
 package example.com.msiops.ground.promise;
 
+import java.util.function.Supplier;
+
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 
@@ -55,6 +57,42 @@ toBreak.on(Throwable.class, Throwable::printStackTrace); // does nothing
 ab.fail(new RuntimeException()); // prints the stack tract
 
             // @formatter:on
+
+        }
+    },
+
+    DEFER {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final Async<Object> toFulfill = new Async<>();
+final Async<Object> toBreak = new Async<>();
+
+final Supplier<Promise<String>> finalizer = () -> Promise
+        .of("Finally!");
+
+/*
+ * these are correct but eclipse marks them with compile errors. Use
+ * them for documentation
+ */
+// toFulfill.promise().defer(finalizer).forEach(System.out::println);
+// toBreak.promise().defer(finalizer).forEach(System.out::println);
+
+/*
+ * These are a workaround for eclipse bug. Do not use them in
+ * documentation.
+ */
+toFulfill.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+toBreak.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+
+toFulfill.succeed(109); // prints Finally!
+toBreak.fail(new Exception()); // prints Finally!
+
+            // @formatter: on
 
         }
     },
