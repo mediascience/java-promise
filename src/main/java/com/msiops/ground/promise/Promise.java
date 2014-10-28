@@ -382,19 +382,15 @@ public final class Promise<T> {
      *            mapping function. Must not be null although the implementation
      *            is not required to check for a null value if it can determine
      *            it will not be invoked.
-     * @param sel
-     *            TODO
      * @param retry
      *            retry function. Must not be null although the implementation
      *            is not required to check for a null value if it can determine
      *            it will not be invoked.
-     *
      * @return new promise of the transformed value.
      *
      */
     public <R, X extends Throwable> Promise<R> then(
             final Function<? super T, Promise<? extends R>> mf,
-            final Class<X> sel,
             final BiFunction<? super X, Integer, Promise<Boolean>> retry) {
 
         final Promise<R> rval = new Promise<>();
@@ -406,7 +402,7 @@ public final class Promise<T> {
                 if (x == null) {
                     final Promise<? extends R> upstream = mf.apply(value);
                     upstream.forEach(rval::succeed);
-                } else if (sel.isInstance(x)) {
+                } else {
                     rval.fail(x);
                 }
 

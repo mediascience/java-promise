@@ -69,8 +69,8 @@ public class DegenerateThenTest {
     @Test
     public void testFromBroken() {
 
-        this.broken.then(this::doWork, Throwable.class, this::doRetry).on(
-                Throwable.class, this.c);
+        this.broken.then(this::doWork, this::doRetry).on(Throwable.class,
+                this.c);
 
         assertTrue(this.work.isEmpty());
         assertTrue(this.retries.isEmpty());
@@ -82,8 +82,7 @@ public class DegenerateThenTest {
     @Test
     public void testSucceedsFirstTime() {
 
-        this.fulfilled.then(this::doWork, Throwable.class, this::doRetry)
-                .forEach(this.c);
+        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
 
         this.work.get(0).succeed(this.rvalue);
 
