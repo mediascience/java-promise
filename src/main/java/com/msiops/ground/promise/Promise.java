@@ -215,11 +215,15 @@ public final class Promise<T> {
      *
      * @param f
      *            mapping function. This is invoked only if the original promise
-     *            is fulfilled. Must not be null.
+     *            is fulfilled. Must not be null although the implementation is
+     *            not required to check for a null value if it can determine it
+     *            will not be invoked.
      *
      * @return promise of transformed value.
      */
     public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+
+        Objects.requireNonNull(f);
 
         final Promise<R> rval = new Promise<>();
 

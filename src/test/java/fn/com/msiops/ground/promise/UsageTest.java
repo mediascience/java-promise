@@ -28,20 +28,6 @@ import com.msiops.ground.promise.Promise;
 
 public class UsageTest {
 
-    @Test
-    public void testAsyncBokenMap() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<?> p = a.promise().map(i -> 2 * i);
-
-        final Exception expected = new Exception();
-
-        a.fail(expected);
-
-        checkBroken(p, expected);
-
-    }
-
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakBrokenFails() {
         final Async<Object> a = new Async<>();
@@ -272,25 +258,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testAsyncMap() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<Integer> p = a.promise();
-
-        final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
-
-        final AtomicReference<Object> actual = new AtomicReference<>();
-        m.forEach(o -> actual.set(o));
-
-        assertNull(actual.get());
-
-        a.succeed(12);
-
-        assertEquals("24", actual.get());
-
-    }
-
-    @Test
     public void testDegenerateBrokenDefer() {
 
         final Promise<?> p = Promise.broken(new Exception()).defer(
@@ -305,17 +272,6 @@ public class UsageTest {
         final Exception expected = new Exception();
         final Promise<Integer> p = Promise.<Integer> broken(expected).flatMap(
                 i -> Promise.of(2 * i));
-
-        checkBroken(p, expected);
-
-    }
-
-    @Test
-    public void testDegenerateBrokenMap() {
-
-        final Exception expected = new Exception();
-        final Promise<?> p = Promise.<Integer> broken(expected).map(i -> 2 * i)
-                .map(String::valueOf);
 
         checkBroken(p, expected);
 
@@ -387,17 +343,6 @@ public class UsageTest {
         final Promise<Integer> m = p.flatMap(i -> Promise.of(2 * i));
 
         checkFulfilled(m, 24);
-
-    }
-
-    @Test
-    public void testDegenerateFulfilledMap() {
-
-        final Promise<Integer> p = Promise.of(12);
-
-        final Promise<?> m = p.map(i -> 2 * i).map(String::valueOf);
-
-        checkFulfilled(m, "24");
 
     }
 
