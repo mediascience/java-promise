@@ -18,9 +18,6 @@ package fn.com.msiops.ground.promise;
 
 import static org.junit.Assert.*;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
@@ -42,41 +39,6 @@ public class UsageTest {
         a.succeed(new RuntimeException());
     }
 
-    @Test
-    public void testAsyncBrokenRecoverBroken() {
-
-        final Async<Integer> a = new Async<>();
-        final Async<String> inner = new Async<>();
-        final Promise<?> p = a.promise().recover(Throwable.class,
-                x -> inner.promise());
-
-        a.fail(new Exception());
-
-        checkNotComplete(p);
-
-        final Exception expected = new Exception();
-        inner.fail(expected);
-
-        checkBroken(p, expected);
-    }
-
-    @Test
-    public void testAsyncBrokenRecoverFulfilled() {
-
-        final Async<Integer> a = new Async<>();
-        final Async<String> inner = new Async<>();
-        final Promise<?> p = a.promise().recover(Throwable.class,
-                x -> inner.promise());
-
-        a.fail(new Exception());
-
-        checkNotComplete(p);
-
-        inner.succeed("Hi.");
-
-        checkFulfilled(p, "Hi.");
-    }
-
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
@@ -89,18 +51,6 @@ public class UsageTest {
         final Async<Object> a = new Async<>();
         a.succeed(new RuntimeException());
         a.succeed(25);
-    }
-
-    @Test
-    public void testAsyncFulfilledFlatMap() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<Integer> p = a.promise().flatMap(i -> Promise.of(2 * i));
-
-        a.succeed(12);
-
-        checkFulfilled(p, 24);
-
     }
 
     @Test(expected = IllegalStateException.class)
@@ -135,17 +85,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testDegenerateFulfilledFlatMap() {
-
-        final Promise<Integer> p = Promise.of(12);
-
-        final Promise<Integer> m = p.flatMap(i -> Promise.of(2 * i));
-
-        checkFulfilled(m, 24);
-
-    }
-
-    @Test
     public void testDegenerateFulfilledThrowsHandlerExceptions() {
 
         final Promise<Integer> p = Promise.of(12);
@@ -158,70 +97,6 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
-
-    }
-
-    @Test
-    public void testDegenerateRecoverBroken() {
-
-        final Exception expected = new RuntimeException();
-        final Promise<?> p = Promise.broken(new Exception()).recover(
-                Throwable.class, ix -> Promise.broken(expected));
-
-        checkBroken(p, expected);
-
-    }
-
-    @Test
-    public void testDegenerateRecoverFulfilled() {
-
-        final Promise<?> p = Promise.broken(new Exception()).recover(
-                Throwable.class, ix -> Promise.of(12));
-
-        checkFulfilled(p, 12);
-
-    }
-
-    private void checkBroken(final Promise<?> p, final Throwable expected) {
-
-        final AtomicReference<Object> actual = new AtomicReference<>();
-
-        p.on(Throwable.class, x -> {
-            actual.set(x);
-        });
-
-        assertEquals(expected, actual.get());
-
-    }
-
-    private void checkFulfilled(final Promise<?> p, final Object expected) {
-
-        final AtomicReference<Object> actual = new AtomicReference<>();
-        /*
-         * needed because fulfilled value may be null so we need to distinguish
-         * between fulfilled null and not being called at all.
-         */
-        final AtomicBoolean set = new AtomicBoolean();
-
-        p.forEach(o -> {
-            actual.set(o);
-            set.set(true);
-        });
-
-        assertTrue(set.get());
-        assertEquals(expected, actual.get());
-
-    }
-
-    private void checkNotComplete(final Promise<?> p) {
-
-        final AtomicBoolean set = new AtomicBoolean();
-
-        p.forEach(o -> {
-            set.set(true);
-        });
-
-        assertFalse(set.get());
 
     }
 

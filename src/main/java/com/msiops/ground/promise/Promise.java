@@ -323,6 +323,9 @@ public final class Promise<T> {
     public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
             final Function<? super X, Promise<? extends R>> h) {
 
+        Objects.requireNonNull(sel);
+        Objects.requireNonNull(h);
+
         final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
