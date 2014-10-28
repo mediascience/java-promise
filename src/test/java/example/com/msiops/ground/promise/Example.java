@@ -92,7 +92,22 @@ toBreak.promise().defer(() -> finalizer.get())
 toFulfill.succeed(109); // prints Finally!
 toBreak.fail(new Exception()); // prints Finally!
 
-            // @formatter: on
+            // @formatter:on
+
+        }
+    },
+
+    RECOVER {
+        @Override
+        public void run() {
+
+            // @formatter:off
+            
+Promise.broken(new Exception())
+        .recover(Exception.class, x -> Promise.of("Recovered!"))
+        .forEach(System.out::println); // prints Recovered!
+
+            // @formatter:on
 
         }
     },

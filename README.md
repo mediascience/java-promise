@@ -79,6 +79,13 @@ toFulfill.succeed(109); // prints Finally!
 toBreak.fail(new Exception()); // prints Finally!
 ```
 
+### Recover
+```java
+Promise.broken(new Exception())
+    .recover(Exception.class, x -> Promise.of("Recovered!"))
+    .forEach(System.out::println); // prints Recovered!
+```
+
 ## Versioning
 
 Releases in the 0.x series are the Wild West. Anything can change between
