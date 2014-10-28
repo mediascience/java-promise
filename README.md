@@ -40,6 +40,28 @@ toBreak.on(Throwable.class, Throwable::printStackTrace); // does nothing
 ab.fail(new RuntimeException()); // prints the stack tract
 ```
 
+### Map
+```java
+Promise.of(75).map(i -> i * 2).forEach(System.out::println); // prints 150
+
+Promise.<Integer> broken(new RuntimeException()).map(i -> i * 2)
+        .on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+```
+
+### Flat Map
+```java
+final Async<Object> inner = new Async<>();
+
+Promise.of(75).map(i -> inner.promise())
+        .forEach(System.out::println); // does nothing
+inner.succeed("Hello"); // prints Hello
+
+final Promise<?> p = Promise.<Integer> broken(
+        new RuntimeException()).flatMap(i -> Promise.of("Hello"));
+p.forEach(System.out::println); // does nothing
+p.on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+```
+
 ## Versioning
 
 Releases in the 0.x series are the Wild West. Anything can change between

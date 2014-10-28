@@ -25,8 +25,8 @@ public enum Example implements Runnable {
         @Override
         public void run() {
             // @formatter:off
-            
-            
+
+
 final Promise<Integer> fulfilled = Promise.of(75);
 fulfilled.forEach(System.out::println); // prints 75
 
@@ -53,14 +53,51 @@ final Async<Integer> ab = new Async<>();
 final Promise<Integer> toBreak = ab.promise();
 toBreak.on(Throwable.class, Throwable::printStackTrace); // does nothing
 ab.fail(new RuntimeException()); // prints the stack tract
-            
+
             // @formatter:on
-            
+
         }
+    },
+
+    FLATMAP {
+
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final Async<Object> inner = new Async<>();
+
+Promise.of(75).map(i -> inner.promise())
+        .forEach(System.out::println); // does nothing
+inner.succeed("Hello"); // prints Hello
+
+final Promise<?> p = Promise.<Integer> broken(
+        new RuntimeException()).flatMap(i -> Promise.of("Hello"));
+p.forEach(System.out::println); // does nothing
+p.on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+
+            // @formatter:on
+
+        };
+    },
+
+    MAP {
+
+        @Override
+        public void run() {
+            // @formatter:off
+
+Promise.of(75).map(i -> i * 2).forEach(System.out::println); // prints 150
+
+Promise.<Integer> broken(new RuntimeException()).map(i -> i * 2)
+        .on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+
+            // @formatter:on
+
+        };
     }
-    
-    
+
     ;
-    
-    
+
 }
