@@ -74,9 +74,6 @@ public class DegenerateMapTest {
     @Test
     public void testMapBroken() {
 
-        final Promise<?> mapped = this.broken.map(this.f);
-        mapped.on(Throwable.class, this.c);
-
         this.broken.map(this.f).on(Throwable.class, this.c);
 
         verify(this.c).accept(this.x);
