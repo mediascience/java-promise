@@ -33,7 +33,6 @@ public class DegenerateThenTest {
 
     private Consumer<Object> c;
 
-    @SuppressWarnings("unused")
     private Promise<Integer> fulfilled, broken;
 
     private List<Async<Boolean>> retries;
@@ -68,9 +67,23 @@ public class DegenerateThenTest {
     }
 
     @Test
+    public void testFromBroken() {
+
+        this.broken.then(this::doWork, Throwable.class, this::doRetry).on(
+                Throwable.class, this.c);
+
+        assertTrue(this.work.isEmpty());
+        assertTrue(this.retries.isEmpty());
+
+        verify(this.c).accept(this.x);
+
+    }
+
+    @Test
     public void testSucceedsFirstTime() {
 
-        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
+        this.fulfilled.then(this::doWork, Throwable.class, this::doRetry)
+                .forEach(this.c);
 
         this.work.get(0).succeed(this.rvalue);
 
