@@ -128,13 +128,17 @@ public final class Promise<T> {
      *            produced promise's value type.
      *
      * @param mf
-     *            mapping function
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
      *
      * @return new promise of the transformed value.
      *
      */
     public <R> Promise<R> flatMap(
             final Function<? super T, Promise<? extends R>> mf) {
+
+        Objects.requireNonNull(mf);
 
         final Promise<R> rval = new Promise<>();
 
