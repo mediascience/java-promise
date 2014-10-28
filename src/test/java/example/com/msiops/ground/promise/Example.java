@@ -97,21 +97,6 @@ toBreak.fail(new Exception()); // prints Finally!
         }
     },
 
-    RECOVER {
-        @Override
-        public void run() {
-
-            // @formatter:off
-            
-Promise.broken(new Exception())
-        .recover(Exception.class, x -> Promise.of("Recovered!"))
-        .forEach(System.out::println); // prints Recovered!
-
-            // @formatter:on
-
-        }
-    },
-
     FLATMAP {
 
         @Override
@@ -149,6 +134,21 @@ Promise.<Integer> broken(new RuntimeException()).map(i -> i * 2)
             // @formatter:on
 
         };
+    },
+
+    RECOVER {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+Promise.broken(new Exception())
+    .recover(Exception.class, x -> Promise.of("Recovered!"))
+    .forEach(System.out::println); // prints Recovered!
+
+            // @formatter:on
+
+        }
     }
 
     ;
