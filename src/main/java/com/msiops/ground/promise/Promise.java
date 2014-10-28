@@ -96,6 +96,8 @@ public final class Promise<T> {
      */
     public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
 
+        Objects.requireNonNull(src);
+
         final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {

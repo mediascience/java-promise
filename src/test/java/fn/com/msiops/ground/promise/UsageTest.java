@@ -43,56 +43,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testAsyncBrokenDefer() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<?> p = a.promise().defer(() -> Promise.of("HI"));
-
-        checkNotComplete(p);
-
-        a.fail(new Exception());
-
-        checkFulfilled(p, "HI");
-    }
-
-    @Test
-    public void testAsyncBrokenDeferBroken() {
-
-        final Async<Integer> outer = new Async<>();
-        final Async<String> inner = new Async<>();
-
-        final Promise<?> p = outer.promise().defer(() -> inner.promise());
-
-        outer.fail(new Error());
-
-        checkNotComplete(p);
-
-        final Exception expected = new Exception();
-        inner.fail(expected);
-
-        checkBroken(p, expected);
-
-    }
-
-    @Test
-    public void testAsyncBrokenDeferFulfilled() {
-
-        final Async<Integer> outer = new Async<>();
-        final Async<String> inner = new Async<>();
-
-        final Promise<?> p = outer.promise().defer(() -> inner.promise());
-
-        outer.fail(new Exception());
-
-        checkNotComplete(p);
-
-        inner.succeed("Hi.");
-
-        checkFulfilled(p, "Hi.");
-
-    }
-
-    @Test
     public void testAsyncBrokenRecoverBroken() {
 
         final Async<Integer> a = new Async<>();
@@ -142,57 +92,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testAsyncFulfilledDefer() {
-
-        final Async<Integer> a = new Async<>();
-        final Promise<?> p = a.promise().defer(() -> Promise.of("HI"));
-
-        checkNotComplete(p);
-
-        a.succeed(12);
-
-        checkFulfilled(p, "HI");
-
-    }
-
-    @Test
-    public void testAsyncFulfilledDeferBroken() {
-
-        final Async<Integer> outer = new Async<>();
-        final Async<String> inner = new Async<>();
-
-        final Promise<?> p = outer.promise().defer(() -> inner.promise());
-
-        outer.succeed(12);
-
-        checkNotComplete(p);
-
-        final Exception expected = new Exception();
-        inner.fail(expected);
-
-        checkBroken(p, expected);
-
-    }
-
-    @Test
-    public void testAsyncFulfilledDeferFulfilled() {
-
-        final Async<Integer> outer = new Async<>();
-        final Async<String> inner = new Async<>();
-
-        final Promise<?> p = outer.promise().defer(() -> inner.promise());
-
-        outer.succeed(12);
-
-        checkNotComplete(p);
-
-        inner.succeed("Hi.");
-
-        checkFulfilled(p, "Hi.");
-
-    }
-
-    @Test
     public void testAsyncFulfilledFlatMap() {
 
         final Async<Integer> a = new Async<>();
@@ -211,15 +110,6 @@ public class UsageTest {
         a.succeed(15);
         a.succeed(25);
 
-    }
-
-    @Test
-    public void testDegenerateBrokenDefer() {
-
-        final Promise<?> p = Promise.broken(new Exception()).defer(
-                () -> Promise.of("HI"));
-
-        checkFulfilled(p, "HI");
     }
 
     @Test(expected = NullPointerException.class)
@@ -242,15 +132,6 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
-    }
-
-    @Test
-    public void testDegenerateFulfilledDefer() {
-
-        final Promise<?> p = Promise.of(12).defer(() -> Promise.of("HI"));
-
-        checkFulfilled(p, "HI");
-
     }
 
     @Test
