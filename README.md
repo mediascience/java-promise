@@ -18,7 +18,7 @@ callbacks.
 ```
 See [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%20%22com.msiops.ground%22%20a%3A%22ground-promise%22) for latest version.
 
-### Create Complete
+### Create Degenerate
 ```java
 final Promise<Integer> fulfilled = Promise.of(75);
 fulfilled.forEach(System.out::println); // prints 75
