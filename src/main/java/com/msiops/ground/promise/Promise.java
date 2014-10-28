@@ -19,6 +19,7 @@ package com.msiops.ground.promise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -389,19 +390,35 @@ public final class Promise<T> {
      * @return new promise of the transformed value.
      *
      */
-    public <R, X extends Throwable> Promise<R> then(
+    public <R> Promise<R> then(
             final Function<? super T, Promise<? extends R>> mf,
-            final BiFunction<? super X, Integer, Promise<Boolean>> retry) {
+            final BiFunction<Throwable, Integer, Promise<Boolean>> retry) {
 
         final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
+
+            final AtomicInteger rindex = new AtomicInteger();
+
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (x == null) {
                     final Promise<? extends R> upstream = mf.apply(value);
                     upstream.forEach(rval::succeed);
+                    upstream.on(
+                            Throwable.class,
+                            ix -> {
+                                final Promise<Boolean> pretry = retry.apply(ix,
+                                        this.rindex.incrementAndGet());
+                                pretry.forEach(b -> {
+                                    if (b) {
+                                        final Promise<? extends R> upstream2 = mf
+                                                .apply(value);
+                                        upstream2.forEach(rval::succeed);
+                                    }
+                                });
+                            });
                 } else {
                     rval.fail(x);
                 }

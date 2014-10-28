@@ -93,6 +93,22 @@ public class DegenerateThenTest {
 
     }
 
+    @Test
+    public void testSucceedsSecondTime() {
+
+        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
+
+        this.work.get(0).fail(this.x);
+        this.retries.get(0).succeed(true);
+        this.work.get(1).succeed(this.rvalue);
+
+        assertEquals(2, this.work.size());
+        assertEquals(1, this.retries.size());
+
+        verify(this.c).accept(this.rvalue);
+
+    }
+
     private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
 
         final Async<Boolean> a = new Async<>();
