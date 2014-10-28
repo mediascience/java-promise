@@ -96,6 +96,8 @@ public final class Promise<T> {
      */
     public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
 
+        Objects.requireNonNull(src);
+
         final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
@@ -128,13 +130,17 @@ public final class Promise<T> {
      *            produced promise's value type.
      *
      * @param mf
-     *            mapping function
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
      *
      * @return new promise of the transformed value.
      *
      */
     public <R> Promise<R> flatMap(
             final Function<? super T, Promise<? extends R>> mf) {
+
+        Objects.requireNonNull(mf);
 
         final Promise<R> rval = new Promise<>();
 
@@ -175,12 +181,16 @@ public final class Promise<T> {
      *
      *
      * @param h
-     *            value handler. Must not be null.
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
      *
      * @throws NullPointerException
-     *             if the handler is null.
+     *             if the handler is null and the promise is not broken.
      */
     public void forEach(final Consumer<? super T> h) {
+
+        Objects.requireNonNull(h);
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -211,11 +221,15 @@ public final class Promise<T> {
      *
      * @param f
      *            mapping function. This is invoked only if the original promise
-     *            is fulfilled. Must not be null.
+     *            is fulfilled. Must not be null although the implementation is
+     *            not required to check for a null value if it can determine it
+     *            will not be invoked.
      *
      * @return promise of transformed value.
      */
     public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+
+        Objects.requireNonNull(f);
 
         final Promise<R> rval = new Promise<>();
 
@@ -259,13 +273,19 @@ public final class Promise<T> {
      *            error is an instance of this type.
      *
      * @param h
-     *            value handler. Must not be null.
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
      *
      * @throws NullPointerException
-     *             if the handler is null.
+     *             if the handler or selector is null and the promise is not
+     *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
+
+        Objects.requireNonNull(sel);
+        Objects.requireNonNull(h);
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -302,6 +322,9 @@ public final class Promise<T> {
      */
     public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
             final Function<? super X, Promise<? extends R>> h) {
+
+        Objects.requireNonNull(sel);
+        Objects.requireNonNull(h);
 
         final Promise<R> rval = new Promise<>();
 

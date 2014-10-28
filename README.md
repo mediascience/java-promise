@@ -16,9 +16,75 @@ callbacks.
     <version>${v.promise}</version>
 </dependency>
 ```
+See [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%20%22com.msiops.ground%22%20a%3A%22ground-promise%22) for latest version.
 
-(Not yet in Maven Central)
+### Create Degenerate
+```java
+final Promise<Integer> fulfilled = Promise.of(75);
+fulfilled.forEach(System.out::println); // prints 75
 
+final Promise<Integer> broken = Promise.broken(new RuntimeException());
+broken.on(Throwable.class, Throwable::printStackTrace); // prints the stack trace
+```
+
+### Create Deferred
+```java
+final Async<Integer> af = new Async<>();
+final Promise<Integer> toFulfill = af.promise();
+toFulfill.forEach(System.out::println);  // does nothing
+af.succeed(75); // prints 75
+
+final Async<Integer> ab = new Async<>();
+final Promise<Integer> toBreak = ab.promise();
+toBreak.on(Throwable.class, Throwable::printStackTrace); // does nothing
+ab.fail(new RuntimeException()); // prints the stack tract
+```
+
+### Map
+```java
+Promise.of(75).map(i -> i * 2).forEach(System.out::println); // prints 150
+
+Promise.<Integer> broken(new RuntimeException()).map(i -> i * 2)
+        .on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+```
+
+### Flat Map
+```java
+final Async<Object> inner = new Async<>();
+
+Promise.of(75).map(i -> inner.promise())
+        .forEach(System.out::println); // does nothing
+inner.succeed("Hello"); // prints Hello
+
+final Promise<?> p = Promise.<Integer> broken(
+        new RuntimeException()).flatMap(i -> Promise.of("Hello"));
+p.forEach(System.out::println); // does nothing
+p.on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+```
+
+### Defer
+```java
+final Async<Object> toFulfill = new Async<>();
+final Async<Object> toBreak = new Async<>();
+
+final Supplier<Promise<String>> finalizer = () -> Promise
+        .of("Finally!");
+
+toFulfill.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+toBreak.promise().defer(() -> finalizer.get())
+        .forEach(System.out::println);
+
+toFulfill.succeed(109); // prints Finally!
+toBreak.fail(new Exception()); // prints Finally!
+```
+
+### Recover
+```java
+Promise.broken(new Exception())
+    .recover(Exception.class, x -> Promise.of("Recovered!"))
+    .forEach(System.out::println); // prints Recovered!
+```
 
 ## Versioning
 
