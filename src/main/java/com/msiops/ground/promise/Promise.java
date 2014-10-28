@@ -19,6 +19,7 @@ package com.msiops.ground.promise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -339,6 +340,72 @@ public final class Promise<T> {
                     final Promise<? extends R> upstream = h.apply(sel.cast(x));
                     upstream.forEach(rval::succeed);
                     upstream.on(Throwable.class, rval::fail);
+                }
+
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+    }
+
+    /**
+     * <p>
+     * Transform the value, potentially retrying on failure. Produces a new
+     * promise that will be fulfilled independently if this promise is
+     * fulfilled. If this promise is fulfilled, a promise function is invoked
+     * and its result placed upstream of the returned promise. If this promise
+     * is broken, a retry function is consulted to determine if the original
+     * should be tried again.
+     * </p>
+     *
+     * <p>
+     * The retry function is a promise function so that a delay can be
+     * introduced. The function is passed both the breaking error and the
+     * current iteration starting with 1 the first time the promise is broken.
+     * The function returns a promise to produce a True or False. If the promise
+     * is fulfilled with True, the original promise function will be invoked
+     * again. If the promise is fulfilled with False, the returned promise will
+     * be broken with the latest error. If the retry promise breaks, the
+     * returned promise will fail with the retry promise's error.
+     * </p>
+     *
+     * <p>
+     * If retry is not required, use {@link #flatMap(Function)} instead.
+     * </p>
+     *
+     * @param <R>
+     *            produced promise's value type.
+     *
+     * @param mf
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @param retry
+     *            retry function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @return new promise of the transformed value.
+     *
+     */
+    public <R, X extends Throwable> Promise<R> then(
+            final Function<? super T, Promise<? extends R>> mf,
+            final BiFunction<? super X, Integer, Promise<Boolean>> retry) {
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                if (x == null) {
+
+                    final Promise<? extends R> upstream = mf.apply(value);
+                    upstream.forEach(rval::succeed);
+
                 }
 
             }
