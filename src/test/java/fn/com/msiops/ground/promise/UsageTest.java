@@ -16,8 +16,6 @@
  */
 package fn.com.msiops.ground.promise;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
@@ -39,24 +37,6 @@ public class UsageTest {
         a.succeed(new RuntimeException());
     }
 
-    @Test
-    public void testAsyncBrokenThrowsHandlerExceptionsBackToFail() {
-
-        final Async<?> async = new Async<>();
-
-        async.promise().on(Throwable.class, x -> {
-            throw new RuntimeException();
-        });
-
-        try {
-            async.fail(new Exception());
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
-
-    }
-
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
@@ -69,24 +49,6 @@ public class UsageTest {
         final Async<Object> a = new Async<>();
         a.succeed(new RuntimeException());
         a.succeed(25);
-    }
-
-    @Test
-    public void testAsyncFulfilledThrowsHandlerExceptionsBackToSucceed() {
-
-        final Async<Integer> async = new Async<>();
-
-        async.promise().forEach(v -> {
-            throw new RuntimeException();
-        });
-
-        try {
-            async.succeed(12);
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
-
     }
 
     @Test(expected = IllegalStateException.class)
@@ -112,41 +74,10 @@ public class UsageTest {
 
     }
 
-    @Test
-    public void testDegenerateBrokenThrowsHandlerExceptions() {
-
-        final Promise<Integer> p = Promise.broken(new Exception());
-
-        try {
-            p.on(Exception.class, x -> {
-                throw new RuntimeException();
-            });
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
-    }
-
     @Test(expected = NullPointerException.class)
     public void testDegenerateFulfilledNullInvalid() {
 
         Promise.of(null);
-
-    }
-
-    @Test
-    public void testDegenerateFulfilledThrowsHandlerExceptions() {
-
-        final Promise<Integer> p = Promise.of(12);
-
-        try {
-            p.forEach(i -> {
-                throw new RuntimeException();
-            });
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
 
     }
 

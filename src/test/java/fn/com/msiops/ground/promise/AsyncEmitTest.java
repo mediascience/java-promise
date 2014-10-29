@@ -121,6 +121,17 @@ public class AsyncEmitTest {
     }
 
     @Test
+    public void testForEachFnErrorIgnored() {
+
+        this.p.forEach(v -> {
+            throw new RuntimeException();
+        });
+
+        this.a.succeed(this.value);
+
+    }
+
+    @Test
     public void testFulfilledHandleMultiple() {
 
         this.p.forEach(this.c);
@@ -182,6 +193,17 @@ public class AsyncEmitTest {
     public void testIncompleteNullSelectorIllegal() {
 
         this.p.on(null, this.c);
+
+    }
+
+    @Test
+    public void testOnFnErrorIgnored() {
+
+        this.p.on(Throwable.class, err -> {
+            throw new RuntimeException();
+        });
+
+        this.a.fail(this.x);
 
     }
 

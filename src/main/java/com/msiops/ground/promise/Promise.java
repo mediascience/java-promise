@@ -224,9 +224,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * {@link Throwable Throwables} thrown by the handler are thrown to the
-     * caller if this promise is already fulfilled. Otherwise, they are thrown
-     * to the fulfilling caller. (TODO is this the best way?)
+     * Any {@link Throwable} thrown from the handler is silently ignored.
      * </p>
      *
      *
@@ -249,7 +247,14 @@ public final class Promise<T> {
                     /*
                      * not an error so invoke the handler.
                      */
-                    h.accept(value);
+                    try {
+                        h.accept(value);
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
                 }
                 /*
                  * else nothing to do
@@ -317,9 +322,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * {@link Throwable Throwables} thrown by the handler are thrown to the
-     * caller if this promise is already broken. Otherwise, they are thrown to
-     * the breaking caller. (TODO is this the best way?)
+     * Any {@link Throwable} thrown from the handler is silently ignored.
      * </p>
      *
      * @param <X>
@@ -349,9 +352,15 @@ public final class Promise<T> {
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (sel.isInstance(x)) {
-                    h.accept(sel.cast(x));
+                    try {
+                        h.accept(sel.cast(x));
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
                 }
-
             }
         };
 
@@ -540,11 +549,9 @@ public final class Promise<T> {
         links.forEach(l -> {
             try {
                 l.next(this.value, this.error);
-            } catch (Error | RuntimeException e) {
-                throw e;
-            } catch (final Throwable e) {
-                // do nothing yet
-                // TODO figure out just what this means
+            } catch (final Throwable err) {
+                throw new AssertionError("unexpected error back-propagation",
+                        err);
             }
         });
     }
@@ -562,11 +569,9 @@ public final class Promise<T> {
         if (immediate) {
             try {
                 link.next(this.value, this.error);
-            } catch (Error | RuntimeException x) {
-                throw x;
-            } catch (final Throwable x) {
-                // do nothing yet
-                // TODO figure out just what this means
+            } catch (final Throwable err) {
+                throw new AssertionError("unexpected error back-propagation",
+                        err);
             }
         }
     }

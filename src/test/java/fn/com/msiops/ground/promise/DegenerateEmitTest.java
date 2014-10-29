@@ -113,6 +113,15 @@ public class DegenerateEmitTest {
     }
 
     @Test
+    public void testForEachFnErrorIgnored() {
+
+        this.pfulfilled.forEach(v -> {
+            throw new RuntimeException();
+        });
+
+    }
+
+    @Test
     public void testFulfilledDoesNotEmitError() {
 
         this.pfulfilled.on(Throwable.class, this.c);
@@ -144,6 +153,15 @@ public class DegenerateEmitTest {
     public void testFulfilledNullConsumerIllegal() {
 
         this.pfulfilled.forEach(null);
+
+    }
+
+    @Test
+    public void testOnFnErrorIgnored() {
+
+        this.pbroken.on(Throwable.class, err -> {
+            throw new RuntimeException();
+        });
 
     }
 
