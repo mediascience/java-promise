@@ -119,8 +119,14 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Perform on completion. Produce a new promise tied to any completion
      * outcome, fulfill or break, of this promise.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            returned promise's value type.
@@ -164,11 +170,17 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled
      * independently if this promise is fulfilled. If this promise is fulfilled,
      * a new promise is produced and placed upstream of the returned promise. If
      * this promise is broken, the returned promise is broken immediately and
      * the mapping function is not invoked.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            produced promise's value type.
@@ -268,8 +280,14 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled or
      * broken as the original.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            the resulting promise's value type.
@@ -369,7 +387,13 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Recover from failure. Produces a promise tied to this promise's failure.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            returned promise's value type.
@@ -447,6 +471,12 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
+     * Any {@link Throwable} thrown by the continuation causes a retry check.
+     * Any {@link Throwable} thrown by the retry function prevents further
+     * retries with the retry function's exceptions sent downstream as failure.
+     * </p>
+     *
+     * <p>
      * If retry is not required, use {@link #flatMap(Function)} instead.
      * </p>
      *
@@ -490,8 +520,13 @@ public final class Promise<T> {
             }
 
             private void maybeRetry(final Throwable x) {
-                final Promise<Boolean> pretry = retry.apply(x,
-                        this.rindex.incrementAndGet());
+                final Promise<Boolean> pretry;
+                try {
+                    pretry = retry.apply(x, this.rindex.incrementAndGet());
+                } catch (final Throwable t) {
+                    rval.fail(t);
+                    return;
+                }
                 pretry.forEach(b -> {
                     if (b) {
                         proceed(Promise.this.value);

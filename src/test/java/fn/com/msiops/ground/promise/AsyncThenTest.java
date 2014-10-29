@@ -81,7 +81,7 @@ public class AsyncThenTest {
 
         verify(this.c, never()).accept(any());
 
-        this.outer.succeed(12);
+        this.outer.succeed(this.value);
 
         verify(this.c).accept(x);
 
@@ -194,6 +194,26 @@ public class AsyncThenTest {
     public void testIncompleteNullRetryFunIllegal() {
 
         this.outer.promise().then(this::doWork, null);
+
+    }
+
+    @Test
+    public void testRetryErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+        final RuntimeException rx = new RuntimeException();
+
+        this.outer.promise().then(v -> {
+            throw x;
+        }, (err, u) -> {
+            throw rx;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(this.value);
+
+        verify(this.c).accept(rx);
 
     }
 

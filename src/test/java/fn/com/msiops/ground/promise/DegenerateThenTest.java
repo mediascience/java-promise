@@ -161,6 +161,22 @@ public class DegenerateThenTest {
     }
 
     @Test
+    public void testRetryErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+        final RuntimeException rx = new RuntimeException();
+
+        this.fulfilled.then(v -> {
+            throw x;
+        }, (err, u) -> {
+            throw rx;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c).accept(rx);
+
+    }
+
+    @Test
     public void testSucceedsFirstTime() {
 
         this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
