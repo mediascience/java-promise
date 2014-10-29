@@ -562,6 +562,37 @@ public final class Promise<T> {
             final Class<X> sel,
             final Function<? super X, Promise<? extends R>> h) {
 
+        return recoverX(sel, h == null ? null : x -> h.apply(x));
+    }
+
+    /**
+     * <p>
+     * Recover from failure. Produces a promise tied to this promise's failure.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
+     *
+     * @param <R>
+     *            returned promise's value type.
+     *
+     * @param <X>
+     *            selector token's type.
+     *
+     * @param sel
+     *            selector type token. The handler will be invoked only if the
+     *            error is compatible with this type.
+     *
+     * @param h
+     *            error handler. This returns a promise
+     *
+     * @return new promise to recover from failure.
+     */
+    public <R, X extends Throwable> Promise<Optional<R>> recoverX(
+            final Class<X> sel,
+            final FunctionX<? super X, Promise<? extends R>, ?> h) {
+
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
 
