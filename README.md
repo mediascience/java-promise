@@ -191,7 +191,7 @@ assert cap2.get().equals("Finally!");
 ```recover(..)``` runs a given promise function only when the target
 promise is broken. It is analogous to the ```catch``` handler in a
 Java try/catch/finally block. The downstream is a promise to compute
-an ```Optional<T>`` of the upstream promise type T. The downstream
+an ```Optional<T>``` of the upstream promise type T. The downstream
 fulfills with an ```Optional.empty()``` if the upstream promise
 is itself fulfilled, thus providing a way to signal success down
 the recovery chain.
