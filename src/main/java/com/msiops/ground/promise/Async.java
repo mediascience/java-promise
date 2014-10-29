@@ -18,6 +18,24 @@ package com.msiops.ground.promise;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * <p>
+ * Complete a promise later. An async instance produces a single {@link Promise}
+ * . The promise is originally incomplete. The promise is completed by
+ * fulfilling it through the {@link #succeed(Object)} method or by breaking it
+ * through the {@link #fail(Throwable)} method.
+ * </p>
+ *
+ * <p>
+ * When complete, the promise will synchronously present the its state to all
+ * applicable bound continuations. Further continuations bound to the promise
+ * will be presented with the state immediately.
+ * </p>
+ *
+ *
+ * @param <T>
+ *            promised value type.
+ */
 public final class Async<T> {
 
     private final AtomicBoolean completed = new AtomicBoolean();
@@ -58,11 +76,14 @@ public final class Async<T> {
      * Fulfill the managed {@link Promise}. Only one completion invocation, this
      * method or {@link #fail(Throwable)}, is allowed per instance.
      *
-     * @param value
-     *            fulfillment value.
-     *
      * @throws IllegalStateException
      *             if the promise is already completed.
+     *
+     * @param value
+     *            fulfillment value. Must not be null.
+     *
+     * @throws NullPointerException
+     *             if the argument is null.
      */
     public void succeed(final T value) {
 
