@@ -19,24 +19,23 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncFlatMapTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Async<Object> inner;
 
     private Promise<Object> m;
 
-    private Function<Integer, Promise<Object>> mf;
+    private FunctionX<Integer, Promise<Object>, ?> mf;
 
     private Async<Integer> outer;
 
@@ -47,13 +46,13 @@ public class AsyncFlatMapTest {
     private Exception x;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final Function<Integer, Promise<Object>> tmf = mock(Function.class);
+        final FunctionX<Integer, Promise<Object>, Throwable> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
         this.outer = new Async<>();
@@ -76,7 +75,7 @@ public class AsyncFlatMapTest {
     }
 
     @Test
-    public void testBoundOnlyOnce() {
+    public void testBoundOnlyOnce() throws Throwable {
 
         this.m.forEach(this.c);
         this.m.forEach(this.c);
@@ -95,7 +94,7 @@ public class AsyncFlatMapTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
         final RuntimeException x = new RuntimeException();
 
@@ -112,7 +111,7 @@ public class AsyncFlatMapTest {
     }
 
     @Test
-    public void testFlatMapBroken() {
+    public void testFlatMapBroken() throws Throwable {
 
         this.m.on(Throwable.class, this.c);
 
@@ -126,7 +125,7 @@ public class AsyncFlatMapTest {
     }
 
     @Test
-    public void testFlatMapFulfilledBroken() {
+    public void testFlatMapFulfilledBroken() throws Throwable {
 
         this.m.on(Throwable.class, this.c);
 
@@ -143,7 +142,7 @@ public class AsyncFlatMapTest {
     }
 
     @Test
-    public void testFlatMapFulfilledFulfilled() {
+    public void testFlatMapFulfilledFulfilled() throws Throwable {
 
         this.m.forEach(this.c);
 

@@ -19,24 +19,23 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class DegenerateFlatMapTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Promise<Integer> fulfilled, broken;
 
     private Async<Object> inner;
 
-    private Function<Integer, Promise<Object>> mf;
+    private FunctionX<Integer, Promise<Object>, Throwable> mf;
 
     private Object rvalue;
 
@@ -45,13 +44,13 @@ public class DegenerateFlatMapTest {
     private Exception x;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final Function<Integer, Promise<Object>> tmf = mock(Function.class);
+        final FunctionX<Integer, Promise<Object>, Throwable> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 
@@ -70,7 +69,7 @@ public class DegenerateFlatMapTest {
     }
 
     @Test
-    public void testBoundOnlyOnce() {
+    public void testBoundOnlyOnce() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -90,7 +89,7 @@ public class DegenerateFlatMapTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
         final RuntimeException x = new RuntimeException();
 
@@ -103,7 +102,7 @@ public class DegenerateFlatMapTest {
     }
 
     @Test
-    public void testFlatMapBroken() {
+    public void testFlatMapBroken() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -116,7 +115,7 @@ public class DegenerateFlatMapTest {
     }
 
     @Test
-    public void testFlatMapFulfilledBroken() {
+    public void testFlatMapFulfilledBroken() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -133,7 +132,7 @@ public class DegenerateFlatMapTest {
     }
 
     @Test
-    public void testFlatMapFulfilledFulfilled() {
+    public void testFlatMapFulfilledFulfilled() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.

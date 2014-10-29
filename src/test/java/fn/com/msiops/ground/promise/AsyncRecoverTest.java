@@ -20,25 +20,25 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncRecoverTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Async<Object> inner;
     private Async<Integer> outer;
 
     private Promise<Optional<Object>> r;
 
-    private Function<Exception, Promise<Object>> rf;
+    private FunctionX<Exception, Promise<Object>, Throwable> rf;
 
     private Object rvalue;
 
@@ -47,13 +47,13 @@ public class AsyncRecoverTest {
     private Exception x, ix;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final Function<Exception, Promise<Object>> trf = mock(Function.class);
+        final FunctionX<Exception, Promise<Object>, Throwable> trf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.outer = new Async<>();
         this.inner = new Async<>();
@@ -64,9 +64,6 @@ public class AsyncRecoverTest {
 
         when(trf.apply(this.x)).thenReturn(this.inner.promise());
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.r = this.outer.promise().recover(Exception.class,
                 err -> trf.apply(err));
 
@@ -80,7 +77,7 @@ public class AsyncRecoverTest {
     }
 
     @Test
-    public void testBoundOnlyOnce() {
+    public void testBoundOnlyOnce() throws Throwable {
 
         this.r.forEach(this.c);
         this.r.forEach(this.c);
@@ -99,7 +96,7 @@ public class AsyncRecoverTest {
     }
 
     @Test
-    public void testBrokenBroken() {
+    public void testBrokenBroken() throws Throwable {
 
         this.r.on(Throwable.class, this.c);
 
@@ -117,7 +114,7 @@ public class AsyncRecoverTest {
     }
 
     @Test
-    public void testBrokenFulfilled() {
+    public void testBrokenFulfilled() throws Throwable {
 
         this.r.forEach(this.c);
 
@@ -138,9 +135,6 @@ public class AsyncRecoverTest {
     public void testBrokenNullSelectorIllegal() {
 
         this.outer.fail(this.x);
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.outer.promise().recover((Class<Exception>) null,
                 err -> this.rf.apply(err));
 
@@ -155,7 +149,7 @@ public class AsyncRecoverTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
         final RuntimeException x = new RuntimeException();
         this.outer.promise().recover(Throwable.class, err -> {
@@ -171,7 +165,7 @@ public class AsyncRecoverTest {
     }
 
     @Test
-    public void testFulfilled() {
+    public void testFulfilled() throws Throwable {
 
         this.r.forEach(this.c);
 
@@ -181,7 +175,7 @@ public class AsyncRecoverTest {
 
         /*
          * fulfillment of the original is signaled with an empty fulfillment of
-         * the recover promise.
+         * the recoverX promise.
          */
         verify(this.c).accept(Optional.empty());
 
@@ -190,9 +184,6 @@ public class AsyncRecoverTest {
     @Test(expected = NullPointerException.class)
     public void testIncompleteNullSelectorIllegal() {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.outer.promise().recover((Class<Exception>) null,
                 err -> this.rf.apply(err));
 

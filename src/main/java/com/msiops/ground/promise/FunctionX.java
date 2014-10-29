@@ -17,7 +17,7 @@
 package com.msiops.ground.promise;
 
 @FunctionalInterface
-public interface FunctionX<T, R, X extends Exception> {
+public interface FunctionX<T, R, X extends Throwable> {
 
     R apply(T t) throws X;
 

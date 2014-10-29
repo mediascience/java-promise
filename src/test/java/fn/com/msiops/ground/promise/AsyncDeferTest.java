@@ -19,18 +19,18 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncDeferTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, ?> c;
 
     private Promise<Object> d;
 
@@ -53,7 +53,7 @@ public class AsyncDeferTest {
         final Supplier<Promise<Object>> tsrc = mock(Supplier.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, ?> tc = mock(ConsumerX.class);
 
         this.outer = new Async<>();
         this.inner = new Async<>();
@@ -77,7 +77,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testBrokenDeferBroken() {
+    public void testBrokenDeferBroken() throws Throwable {
 
         this.d.on(Throwable.class, this.c);
 
@@ -94,7 +94,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testBrokenDeferFulfilled() {
+    public void testBrokenDeferFulfilled() throws Throwable {
 
         this.d.forEach(this.c);
 
@@ -111,7 +111,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testBrokenFinalizedOnlyOnce() {
+    public void testBrokenFinalizedOnlyOnce() throws Throwable {
 
         this.d.forEach(this.c);
         this.d.forEach(this.c);
@@ -134,9 +134,9 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
-        final RuntimeException x = new RuntimeException();
+        final Exception x = new Exception();
         this.outer.promise().defer(() -> {
             throw x;
         }).on(Throwable.class, this.c);
@@ -150,7 +150,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testFulfilledDeferBroken() {
+    public void testFulfilledDeferBroken() throws Throwable {
 
         this.d.on(Throwable.class, this.c);
 
@@ -167,7 +167,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testFulfilledDeferFulfilled() {
+    public void testFulfilledDeferFulfilled() throws Throwable {
 
         this.d.forEach(this.c);
 
@@ -184,7 +184,7 @@ public class AsyncDeferTest {
     }
 
     @Test
-    public void testFulfilledFinalizedOnlyOnce() {
+    public void testFulfilledFinalizedOnlyOnce() throws Throwable {
 
         this.d.forEach(this.c);
         this.d.forEach(this.c);

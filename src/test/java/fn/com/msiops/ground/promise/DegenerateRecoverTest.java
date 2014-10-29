@@ -20,18 +20,18 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class DegenerateRecoverTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -52,7 +52,7 @@ public class DegenerateRecoverTest {
         final Function<Exception, Promise<Object>> trf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 
@@ -74,11 +74,8 @@ public class DegenerateRecoverTest {
     }
 
     @Test
-    public void testBoundOnlyOnce() {
+    public void testBoundOnlyOnce() throws Throwable {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         final Promise<?> recovery = this.broken.recover(Exception.class,
                 err -> this.rf.apply(err));
 
@@ -95,11 +92,8 @@ public class DegenerateRecoverTest {
     }
 
     @Test
-    public void testBrokenBroken() {
+    public void testBrokenBroken() throws Throwable {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.broken.recover(Exception.class, err -> this.rf.apply(err)).on(
                 Throwable.class, this.c);
 
@@ -113,11 +107,8 @@ public class DegenerateRecoverTest {
     }
 
     @Test
-    public void testBrokenFulfilled() {
+    public void testBrokenFulfilled() throws Throwable {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.broken.recover(Exception.class, err -> this.rf.apply(err))
                 .forEach(this.c);
 
@@ -133,9 +124,6 @@ public class DegenerateRecoverTest {
     @Test(expected = NullPointerException.class)
     public void testBrokenNullSelectorIllegal() {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.fulfilled.recover((Class<Exception>) null,
                 err -> this.rf.apply(err));
 
@@ -149,7 +137,7 @@ public class DegenerateRecoverTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
         final RuntimeException x = new RuntimeException();
 
@@ -166,11 +154,8 @@ public class DegenerateRecoverTest {
      * observe upstream success from the recovery chain.
      */
     @Test
-    public void testFulfilled() {
+    public void testFulfilled() throws Throwable {
 
-        /*
-         * hack around eclipse bug. Javac doesn't require the lambda expression.
-         */
         this.fulfilled.recover(Exception.class, err -> this.rf.apply(err))
                 .forEach(this.c);
 
@@ -178,7 +163,7 @@ public class DegenerateRecoverTest {
 
         /*
          * fulfillment of the original is signaled with an empty fulfillment of
-         * the recover promise.
+         * the recoverX promise.
          */
         verify(this.c).accept(Optional.empty());
 

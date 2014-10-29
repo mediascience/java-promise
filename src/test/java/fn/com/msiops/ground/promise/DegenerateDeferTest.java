@@ -18,18 +18,17 @@ package fn.com.msiops.ground.promise;
 
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.SupplierX;
 
 public class DegenerateDeferTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -37,20 +36,20 @@ public class DegenerateDeferTest {
 
     private Object rvalue;
 
-    private Supplier<Promise<Object>> src;
+    private SupplierX<Promise<Object>, Throwable> src;
 
     private Integer value;
 
     private Exception x, ix;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final Supplier<Promise<Object>> tsrc = mock(Supplier.class);
+        final SupplierX<Promise<Object>, Throwable> tsrc = mock(SupplierX.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 
@@ -71,7 +70,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testBrokenDeferBroken() {
+    public void testBrokenDeferBroken() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -85,7 +84,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testBrokenDeferFulfilled() {
+    public void testBrokenDeferFulfilled() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -99,7 +98,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testBrokenFinalizedOnlyOnce() {
+    public void testBrokenFinalizedOnlyOnce() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -124,9 +123,9 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testContinuationErrorSentDownstream() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
 
-        final RuntimeException x = new RuntimeException();
+        final Exception x = new Exception();
 
         this.fulfilled.defer(() -> {
             throw x;
@@ -137,7 +136,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testFulfilledDeferBroken() {
+    public void testFulfilledDeferBroken() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -151,7 +150,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testFulfilledDeferFulfilled() {
+    public void testFulfilledDeferFulfilled() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
@@ -165,7 +164,7 @@ public class DegenerateDeferTest {
     }
 
     @Test
-    public void testFulfilledFinalizedOnlyOnce() {
+    public void testFulfilledFinalizedOnlyOnce() throws Throwable {
 
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.

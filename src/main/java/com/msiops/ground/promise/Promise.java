@@ -22,10 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * <p>
@@ -138,32 +135,7 @@ public final class Promise<T> {
      *
      * @return promise to compute a new value when this promise complete.
      */
-    public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
-
-        return deferX(src == null ? null : () -> src.get());
-    }
-
-    /**
-     * <p>
-     * Perform on completion. Produce a new promise tied to any completion
-     * outcome, fulfill or break, of this promise.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            returned promise's value type.
-     *
-     * @param src
-     *            a promise supplier. The supplier is invoked only when this
-     *            promise becomes complete. The supplied promise is inserted
-     *            upstream to the returned promise.
-     *
-     * @return promise to compute a new value when this promise complete.
-     */
-    public <R> Promise<R> deferX(final SupplierX<Promise<? extends R>, ?> src) {
+    public <R> Promise<R> defer(final SupplierX<Promise<? extends R>, ?> src) {
 
         Objects.requireNonNull(src);
 
@@ -220,37 +192,6 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> flatMap(
-            final Function<? super T, Promise<? extends R>> mf) {
-
-        return flatMapX(mf == null ? null : v -> mf.apply(v));
-
-    }
-
-    /**
-     * <p>
-     * Transform the value. Produces a new promise that will be fulfilled
-     * independently if this promise is fulfilled. If this promise is fulfilled,
-     * a new promise is produced and placed upstream of the returned promise. If
-     * this promise is broken, the returned promise is broken immediately and
-     * the mapping function is not invoked.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            produced promise's value type.
-     *
-     * @param mf
-     *            mapping function. Must not be null although the implementation
-     *            is not required to check for a null value if it can determine
-     *            it will not be invoked.
-     *
-     * @return new promise of the transformed value.
-     *
-     */
-    public <R> Promise<R> flatMapX(
             final FunctionX<? super T, Promise<? extends R>, ?> mf) {
 
         Objects.requireNonNull(mf);
@@ -305,35 +246,7 @@ public final class Promise<T> {
      * @throws NullPointerException
      *             if the handler is null and the promise is not broken.
      */
-    public void forEach(final Consumer<? super T> h) {
-
-        forEachX(h == null ? null : v -> h.accept(v));
-
-    }
-
-    /**
-     * <p>
-     * Emit the value of this promise. If the promise is fulfilled when this is
-     * invoked, the handler is invoked immediately with the value. If this
-     * promise is broken now or in the future, the handler is ignored. If this
-     * promise is incomplete, the handler will be invoked if the promise becomes
-     * fulfilled later.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown from the handler is silently ignored.
-     * </p>
-     *
-     *
-     * @param h
-     *            value handler. Must not be null although the implementation is
-     *            permitted to accept a null value if it can determine it will
-     *            not be invoked.
-     *
-     * @throws NullPointerException
-     *             if the handler is null and the promise is not broken.
-     */
-    public void forEachX(final ConsumerX<? super T, ?> h) {
+    public void forEach(final ConsumerX<? super T, ?> h) {
 
         Objects.requireNonNull(h);
 
@@ -385,34 +298,7 @@ public final class Promise<T> {
      *
      * @return promise of transformed value.
      */
-    public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
-
-        return mapX(f == null ? null : v -> f.apply(v));
-
-    }
-
-    /**
-     * <p>
-     * Transform the value. Produces a new promise that will be fulfilled or
-     * broken as the original.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            the resulting promise's value type.
-     *
-     * @param f
-     *            mapping function. This is invoked only if the original promise
-     *            is fulfilled. Must not be null although the implementation is
-     *            not required to check for a null value if it can determine it
-     *            will not be invoked.
-     *
-     * @return promise of transformed value.
-     */
-    public <R> Promise<R> mapX(final FunctionX<? super T, ? extends R, ?> f) {
+    public <R> Promise<R> map(final FunctionX<? super T, ? extends R, ?> f) {
 
         Objects.requireNonNull(f);
 
@@ -472,42 +358,6 @@ public final class Promise<T> {
      *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
-            final Consumer<? super X> h) {
-
-        onX(sel, h == null ? null : x -> h.accept(x));
-
-    }
-
-    /**
-     * <p>
-     * Emit the error of this promise. If the promise is broken when this is
-     * invoked, the handler is invoked immediately with the error. If this is
-     * promise is fulfilled now or in the future, the handler is ignored. If
-     * this promise is incomplete, the handler will be invoked if the promise is
-     * broken later.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown from the handler is silently ignored.
-     * </p>
-     *
-     * @param <X>
-     *            type of throwable to handle.
-     *
-     * @param sel
-     *            exception selector. The consumer will be called only if the
-     *            error is an instance of this type.
-     *
-     * @param h
-     *            value handler. Must not be null although the implementation is
-     *            permitted to accept a null value if it can determine it will
-     *            not be invoked.
-     *
-     * @throws NullPointerException
-     *             if the handler or selector is null and the promise is not
-     *             fulfilled.
-     */
-    public <X extends Throwable> void onX(final Class<X> sel,
             final ConsumerX<? super X, ?> h) {
 
         Objects.requireNonNull(sel);
@@ -559,37 +409,6 @@ public final class Promise<T> {
      * @return new promise to recover from failure.
      */
     public <R, X extends Throwable> Promise<Optional<R>> recover(
-            final Class<X> sel,
-            final Function<? super X, Promise<? extends R>> h) {
-
-        return recoverX(sel, h == null ? null : x -> h.apply(x));
-    }
-
-    /**
-     * <p>
-     * Recover from failure. Produces a promise tied to this promise's failure.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            returned promise's value type.
-     *
-     * @param <X>
-     *            selector token's type.
-     *
-     * @param sel
-     *            selector type token. The handler will be invoked only if the
-     *            error is compatible with this type.
-     *
-     * @param h
-     *            error handler. This returns a promise
-     *
-     * @return new promise to recover from failure.
-     */
-    public <R, X extends Throwable> Promise<Optional<R>> recoverX(
             final Class<X> sel,
             final FunctionX<? super X, Promise<? extends R>, ?> h) {
 
@@ -674,60 +493,6 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> then(
-            final Function<? super T, Promise<? extends R>> mf,
-            final BiFunction<Throwable, Integer, Promise<Boolean>> retry) {
-
-        return thenX(mf == null ? null : v -> mf.apply(v), retry == null ? null
-                : (x, u) -> retry.apply(x, u));
-
-    }
-
-    /**
-     * <p>
-     * Transform the value, potentially retrying on failure. Produces a new
-     * promise that will be fulfilled independently if this promise is
-     * fulfilled. If this promise is fulfilled, a promise function is invoked
-     * and its result placed upstream of the returned promise. If this promise
-     * is broken, a retry function is consulted to determine if the original
-     * should be tried again.
-     * </p>
-     *
-     * <p>
-     * The retry function is a promise function so that a delay can be
-     * introduced. The function is passed both the breaking error and the
-     * current iteration starting with 1 the first time the promise is broken.
-     * The function returns a promise to produce a True or False. If the promise
-     * is fulfilled with True, the original promise function will be invoked
-     * again. If the promise is fulfilled with False, the returned promise will
-     * be broken with the latest error. If the retry promise breaks, the
-     * returned promise will fail with the retry promise's error.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation causes a retry check.
-     * Any {@link Throwable} thrown by the retry function prevents further
-     * retries with the retry function's exceptions sent downstream as failure.
-     * </p>
-     *
-     * <p>
-     * If retry is not required, use {@link #flatMap(Function)} instead.
-     * </p>
-     *
-     * @param <R>
-     *            produced promise's value type.
-     *
-     * @param mf
-     *            mapping function. Must not be null although the implementation
-     *            is not required to check for a null value if it can determine
-     *            it will not be invoked.
-     * @param retry
-     *            retry function. Must not be null although the implementation
-     *            is not required to check for a null value if it can determine
-     *            it will not be invoked.
-     * @return new promise of the transformed value.
-     *
-     */
-    public <R> Promise<R> thenX(
             final FunctionX<? super T, Promise<? extends R>, ?> mf,
             final BiFunctionX<Throwable, Integer, Promise<Boolean>, ?> retry) {
 

@@ -19,19 +19,18 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncEmitTest {
 
     private Async<Integer> a;
 
-    private Consumer<Object> c;
+    private ConsumerX<Object, Throwable> c;
 
     private Promise<Integer> p;
 
@@ -43,7 +42,7 @@ public class AsyncEmitTest {
     public void setup() {
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
 
         this.x = new Exception();
 
@@ -56,7 +55,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testBrokenHandleError() {
+    public void testBrokenHandleError() throws Throwable {
 
         this.p.on(Throwable.class, this.c);
 
@@ -69,7 +68,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testBrokenHandleErrorMultiple() {
+    public void testBrokenHandleErrorMultiple() throws Throwable {
 
         this.p.on(Throwable.class, this.c);
         this.p.on(Throwable.class, this.c);
@@ -83,7 +82,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testBrokenHandleSelectedError() {
+    public void testBrokenHandleSelectedError() throws Throwable {
 
         this.p.on(Exception.class, this.c);
 
@@ -94,7 +93,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testBrokenNotHandleNotSelectedError() {
+    public void testBrokenNotHandleNotSelectedError() throws Throwable {
 
         this.p.on(RuntimeException.class, this.c);
 
@@ -132,7 +131,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleMultiple() {
+    public void testFulfilledHandleMultiple() throws Throwable {
 
         this.p.forEach(this.c);
         this.p.forEach(this.c);
@@ -146,7 +145,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleValue() {
+    public void testFulfilledHandleValue() throws Throwable {
 
         this.p.forEach(this.c);
 
@@ -159,7 +158,7 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testFulfilledNotHandledError() {
+    public void testFulfilledNotHandledError() throws Throwable {
 
         this.p.on(Throwable.class, this.c);
 
