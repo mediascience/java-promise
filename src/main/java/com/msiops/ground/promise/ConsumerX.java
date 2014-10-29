@@ -16,8 +16,8 @@
  */
 package com.msiops.ground.promise;
 
-public interface ConsumerX<T, X extends Throwable> {
+public interface ConsumerX<T> {
 
-    void accept(T t) throws X;
+    void accept(T t) throws Throwable;
 
 }

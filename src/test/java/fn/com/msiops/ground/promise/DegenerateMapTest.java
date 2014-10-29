@@ -29,7 +29,7 @@ import com.msiops.ground.promise.Promise;
 
 public class DegenerateMapTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Function<Integer, Object> f;
 
@@ -48,7 +48,7 @@ public class DegenerateMapTest {
         final Function<Integer, Object> tf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);

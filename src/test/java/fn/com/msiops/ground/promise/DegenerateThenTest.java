@@ -31,7 +31,7 @@ import com.msiops.ground.promise.Promise;
 
 public class DegenerateThenTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -52,7 +52,7 @@ public class DegenerateThenTest {
         this.retries = new ArrayList<>();
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);

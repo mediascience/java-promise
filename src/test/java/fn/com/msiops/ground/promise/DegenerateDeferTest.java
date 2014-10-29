@@ -28,7 +28,7 @@ import com.msiops.ground.promise.SupplierX;
 
 public class DegenerateDeferTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -36,7 +36,7 @@ public class DegenerateDeferTest {
 
     private Object rvalue;
 
-    private SupplierX<Promise<Object>, Throwable> src;
+    private SupplierX<Promise<Object>> src;
 
     private Integer value;
 
@@ -46,10 +46,10 @@ public class DegenerateDeferTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final SupplierX<Promise<Object>, Throwable> tsrc = mock(SupplierX.class);
+        final SupplierX<Promise<Object>> tsrc = mock(SupplierX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 

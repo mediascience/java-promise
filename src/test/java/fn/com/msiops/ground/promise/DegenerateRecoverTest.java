@@ -31,7 +31,7 @@ import com.msiops.ground.promise.Promise;
 
 public class DegenerateRecoverTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -52,7 +52,7 @@ public class DegenerateRecoverTest {
         final Function<Exception, Promise<Object>> trf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 

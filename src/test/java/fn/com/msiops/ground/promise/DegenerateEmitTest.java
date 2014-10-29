@@ -27,7 +27,7 @@ import com.msiops.ground.promise.Promise;
 
 public class DegenerateEmitTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> pfulfilled, pbroken;
 
@@ -39,7 +39,7 @@ public class DegenerateEmitTest {
     public void setup() {
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.x = new Exception();
 

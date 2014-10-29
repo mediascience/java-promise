@@ -29,13 +29,13 @@ import com.msiops.ground.promise.Promise;
 
 public class DegenerateFlatMapTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
     private Async<Object> inner;
 
-    private FunctionX<Integer, Promise<Object>, Throwable> mf;
+    private FunctionX<Integer, Promise<Object>> mf;
 
     private Object rvalue;
 
@@ -47,10 +47,10 @@ public class DegenerateFlatMapTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Promise<Object>, Throwable> tmf = mock(FunctionX.class);
+        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
 

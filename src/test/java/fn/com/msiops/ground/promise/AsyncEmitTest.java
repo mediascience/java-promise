@@ -30,7 +30,7 @@ public class AsyncEmitTest {
 
     private Async<Integer> a;
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> p;
 
@@ -42,7 +42,7 @@ public class AsyncEmitTest {
     public void setup() {
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.x = new Exception();
 

@@ -32,7 +32,7 @@ import com.msiops.ground.promise.Promise;
 
 public class AsyncThenTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Async<Integer> outer;
 
@@ -55,7 +55,7 @@ public class AsyncThenTest {
         this.retries = new ArrayList<>();
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
 

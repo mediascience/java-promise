@@ -31,14 +31,14 @@ import com.msiops.ground.promise.Promise;
 
 public class AsyncRecoverTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Async<Object> inner;
     private Async<Integer> outer;
 
     private Promise<Optional<Object>> r;
 
-    private FunctionX<Exception, Promise<Object>, Throwable> rf;
+    private FunctionX<Exception, Promise<Object>> rf;
 
     private Object rvalue;
 
@@ -50,10 +50,10 @@ public class AsyncRecoverTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Exception, Promise<Object>, Throwable> trf = mock(FunctionX.class);
+        final FunctionX<Exception, Promise<Object>> trf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.outer = new Async<>();
         this.inner = new Async<>();

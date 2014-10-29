@@ -135,7 +135,7 @@ public final class Promise<T> {
      *
      * @return promise to compute a new value when this promise complete.
      */
-    public <R> Promise<R> defer(final SupplierX<Promise<? extends R>, ?> src) {
+    public <R> Promise<R> defer(final SupplierX<Promise<? extends R>> src) {
 
         Objects.requireNonNull(src);
 
@@ -192,7 +192,7 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> flatMap(
-            final FunctionX<? super T, Promise<? extends R>, ?> mf) {
+            final FunctionX<? super T, Promise<? extends R>> mf) {
 
         Objects.requireNonNull(mf);
 
@@ -246,7 +246,7 @@ public final class Promise<T> {
      * @throws NullPointerException
      *             if the handler is null and the promise is not broken.
      */
-    public void forEach(final ConsumerX<? super T, ?> h) {
+    public void forEach(final ConsumerX<? super T> h) {
 
         Objects.requireNonNull(h);
 
@@ -298,7 +298,7 @@ public final class Promise<T> {
      *
      * @return promise of transformed value.
      */
-    public <R> Promise<R> map(final FunctionX<? super T, ? extends R, ?> f) {
+    public <R> Promise<R> map(final FunctionX<? super T, ? extends R> f) {
 
         Objects.requireNonNull(f);
 
@@ -358,7 +358,7 @@ public final class Promise<T> {
      *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
-            final ConsumerX<? super X, ?> h) {
+            final ConsumerX<? super X> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
@@ -410,7 +410,7 @@ public final class Promise<T> {
      */
     public <R, X extends Throwable> Promise<Optional<R>> recover(
             final Class<X> sel,
-            final FunctionX<? super X, Promise<? extends R>, ?> h) {
+            final FunctionX<? super X, Promise<? extends R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
@@ -493,8 +493,8 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> then(
-            final FunctionX<? super T, Promise<? extends R>, ?> mf,
-            final BiFunctionX<Throwable, Integer, Promise<Boolean>, ?> retry) {
+            final FunctionX<? super T, Promise<? extends R>> mf,
+            final BiFunctionX<Throwable, Integer, Promise<Boolean>> retry) {
 
         Objects.requireNonNull(mf);
         Objects.requireNonNull(retry);

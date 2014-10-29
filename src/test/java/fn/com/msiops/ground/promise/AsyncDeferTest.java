@@ -30,7 +30,7 @@ import com.msiops.ground.promise.Promise;
 
 public class AsyncDeferTest {
 
-    private ConsumerX<Object, ?> c;
+    private ConsumerX<Object> c;
 
     private Promise<Object> d;
 
@@ -53,7 +53,7 @@ public class AsyncDeferTest {
         final Supplier<Promise<Object>> tsrc = mock(Supplier.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, ?> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.outer = new Async<>();
         this.inner = new Async<>();

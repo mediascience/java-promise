@@ -29,13 +29,13 @@ import com.msiops.ground.promise.Promise;
 
 public class AsyncFlatMapTest {
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
     private Async<Object> inner;
 
     private Promise<Object> m;
 
-    private FunctionX<Integer, Promise<Object>, ?> mf;
+    private FunctionX<Integer, Promise<Object>> mf;
 
     private Async<Integer> outer;
 
@@ -49,10 +49,10 @@ public class AsyncFlatMapTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Promise<Object>, Throwable> tmf = mock(FunctionX.class);
+        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.inner = new Async<>();
         this.outer = new Async<>();

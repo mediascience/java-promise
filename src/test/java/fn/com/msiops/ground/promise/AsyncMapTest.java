@@ -31,9 +31,9 @@ public class AsyncMapTest {
 
     private Async<Integer> a;
 
-    private ConsumerX<Object, Throwable> c;
+    private ConsumerX<Object> c;
 
-    private FunctionX<Integer, Object, Throwable> f;
+    private FunctionX<Integer, Object> f;
 
     private Promise<Object> m;
 
@@ -47,10 +47,10 @@ public class AsyncMapTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Object, Throwable> tf = mock(FunctionX.class);
+        final FunctionX<Integer, Object> tf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object, Throwable> tc = mock(ConsumerX.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
 

@@ -17,8 +17,8 @@
 package com.msiops.ground.promise;
 
 @FunctionalInterface
-public interface SupplierX<R, X extends Throwable> {
+public interface SupplierX<R> {
 
-    R get() throws X;
+    R get() throws Throwable;
 
 }

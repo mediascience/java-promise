@@ -17,8 +17,8 @@
 package com.msiops.ground.promise;
 
 @FunctionalInterface
-public interface BiFunctionX<T, U, R, X extends Exception> {
+public interface BiFunctionX<T, U, R> {
 
-    R apply(T t, U u) throws X;
+    R apply(T t, U u) throws Throwable;
 
 }
