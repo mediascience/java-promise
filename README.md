@@ -128,7 +128,7 @@ assert ecap.get() == x;
 
 ### Retry
 
-The ```then(..)``` method binds in the same way as ```flatMap(..)`` but also
+The ```then(..)``` method binds in the same way as ```flatMap(..)``` but also
 accepts a retry policy expressed as a promise function. If the promise
 supplied by the work function fails, then the retry function is invoke. When
 it is fulfilled with ```true``` the work function is run again and its result
@@ -163,7 +163,7 @@ assert vcap.get().equals("Done!");
 
 ```defer(..)``` runs a given promise function only when the
 target promise is completed, regardless of whether it is fulfilled
-or broken. It is analogous to the ```finally`` handler in a Java
+or broken. It is analogous to the ```finally``` handler in a Java
 try/catch/finally block.
 
 ```java
@@ -182,7 +182,7 @@ assert cap1.get().equals("Finally!");
 final AtomicReference<String> cap2 = new AtomicReference<String>();
 toBreak.promise().defer(finalizer).forEach(cap2::set);
 assert cap2.get() == null;
-toBreak.fail(new Exception()); // prints Finally!
+toBreak.fail(new Exception());
 assert cap2.get().equals("Finally!");
 ```
 
@@ -190,7 +190,11 @@ assert cap2.get().equals("Finally!");
 
 ```recover(..)``` runs a given promise function only when the target
 promise is broken. It is analogous to the ```catch``` handler in a
-Java try/catch/finally block.
+Java try/catch/finally block. The downstream is a promise to compute
+an ```Optional<T>`` of the upstream promise type T. The downstream
+fulfills with an ```Optional.empty()``` if the upstream promise
+is itself fulfilled, thus providing a way to signal success down
+the recovery chain.
 
 ```java
 // recover from broken promise
