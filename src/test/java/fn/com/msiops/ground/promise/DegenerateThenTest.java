@@ -67,6 +67,19 @@ public class DegenerateThenTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.fulfilled.then(v -> {
+            throw x;
+        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFromBroken() {
 
         this.broken.then(this::doWork, this::doRetry).on(Throwable.class,

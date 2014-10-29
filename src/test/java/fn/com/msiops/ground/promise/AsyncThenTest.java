@@ -71,6 +71,23 @@ public class AsyncThenTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.outer.promise().then(v -> {
+            throw x;
+        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(12);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFromBroken() {
 
         this.r.on(Throwable.class, this.c);

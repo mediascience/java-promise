@@ -480,23 +480,28 @@ public final class Promise<T> {
 
             }
 
-            void proceed(final T value) {
-                this.upstream.set(mf.apply(value));
+            private void maybeRetry(final Throwable x) {
+                final Promise<Boolean> pretry = retry.apply(x,
+                        this.rindex.incrementAndGet());
+                pretry.forEach(b -> {
+                    if (b) {
+                        proceed(Promise.this.value);
+                    } else {
+                        rval.fail(x);
+                    }
+                });
+                pretry.on(Throwable.class, rval::fail);
+            }
+
+            private void proceed(final T value) {
+                try {
+                    this.upstream.set(mf.apply(value));
+                } catch (final Throwable t) {
+                    maybeRetry(t);
+                    return;
+                }
                 this.upstream.get().forEach(rval::succeed);
-                this.upstream.get().on(
-                        Throwable.class,
-                        x -> {
-                            final Promise<Boolean> pretry = retry.apply(x,
-                                    this.rindex.incrementAndGet());
-                            pretry.forEach(b -> {
-                                if (b) {
-                                    proceed(value);
-                                } else {
-                                    rval.fail(x);
-                                }
-                            });
-                            pretry.on(Throwable.class, rval::fail);
-                        });
+                this.upstream.get().on(Throwable.class, this::maybeRetry);
             }
         };
 
