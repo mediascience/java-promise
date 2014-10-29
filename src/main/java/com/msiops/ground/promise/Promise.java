@@ -419,14 +419,16 @@ public final class Promise<T> {
                 this.upstream.get().on(
                         Throwable.class,
                         x -> {
-                            retry.apply(x, this.rindex.incrementAndGet())
-                                    .forEach(b -> {
-                                        if (b) {
-                                            proceed(value);
-                                        } else {
-                                            rval.fail(x);
-                                        }
-                                    });
+                            final Promise<Boolean> pretry = retry.apply(x,
+                                    this.rindex.incrementAndGet());
+                            pretry.forEach(b -> {
+                                if (b) {
+                                    proceed(value);
+                                } else {
+                                    rval.fail(x);
+                                }
+                            });
+                            pretry.on(Throwable.class, rval::fail);
                         });
             }
         };

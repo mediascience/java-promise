@@ -106,6 +106,34 @@ public class DegenerateThenTest {
     }
 
     @Test
+    public void testGiveUpWithExplicitError() {
+
+        final int workLimit = 5;
+
+        this.fulfilled.then(this::doWork, this::doRetry).on(Throwable.class,
+                this.c);
+
+        for (int i = 0; i < workLimit - 1; i = i + 1) {
+            /*
+             * use a new exception each time so can check for specific one
+             */
+            this.work.get(i).fail(new Exception());
+            this.retries.get(i).succeed(true);
+        }
+
+        final Exception myX = new RuntimeException();
+
+        this.work.get(workLimit - 1).fail(this.x);
+        this.retries.get(workLimit - 1).fail(myX); // no more retries
+
+        assertEquals(workLimit, this.work.size());
+        assertEquals(workLimit, this.retries.size());
+
+        verify(this.c).accept(myX);
+
+    }
+
+    @Test
     public void testSucceedsFirstTime() {
 
         this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
