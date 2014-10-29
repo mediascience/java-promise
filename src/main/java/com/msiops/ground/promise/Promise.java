@@ -677,6 +677,60 @@ public final class Promise<T> {
             final Function<? super T, Promise<? extends R>> mf,
             final BiFunction<Throwable, Integer, Promise<Boolean>> retry) {
 
+        return thenX(mf == null ? null : v -> mf.apply(v), retry == null ? null
+                : (x, u) -> retry.apply(x, u));
+
+    }
+
+    /**
+     * <p>
+     * Transform the value, potentially retrying on failure. Produces a new
+     * promise that will be fulfilled independently if this promise is
+     * fulfilled. If this promise is fulfilled, a promise function is invoked
+     * and its result placed upstream of the returned promise. If this promise
+     * is broken, a retry function is consulted to determine if the original
+     * should be tried again.
+     * </p>
+     *
+     * <p>
+     * The retry function is a promise function so that a delay can be
+     * introduced. The function is passed both the breaking error and the
+     * current iteration starting with 1 the first time the promise is broken.
+     * The function returns a promise to produce a True or False. If the promise
+     * is fulfilled with True, the original promise function will be invoked
+     * again. If the promise is fulfilled with False, the returned promise will
+     * be broken with the latest error. If the retry promise breaks, the
+     * returned promise will fail with the retry promise's error.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation causes a retry check.
+     * Any {@link Throwable} thrown by the retry function prevents further
+     * retries with the retry function's exceptions sent downstream as failure.
+     * </p>
+     *
+     * <p>
+     * If retry is not required, use {@link #flatMap(Function)} instead.
+     * </p>
+     *
+     * @param <R>
+     *            produced promise's value type.
+     *
+     * @param mf
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     * @param retry
+     *            retry function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     * @return new promise of the transformed value.
+     *
+     */
+    public <R> Promise<R> thenX(
+            final FunctionX<? super T, Promise<? extends R>, ?> mf,
+            final BiFunctionX<Throwable, Integer, Promise<Boolean>, ?> retry) {
+
         Objects.requireNonNull(mf);
         Objects.requireNonNull(retry);
 
