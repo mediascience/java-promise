@@ -222,6 +222,37 @@ public final class Promise<T> {
     public <R> Promise<R> flatMap(
             final Function<? super T, Promise<? extends R>> mf) {
 
+        return flatMapX(mf == null ? null : v -> mf.apply(v));
+
+    }
+
+    /**
+     * <p>
+     * Transform the value. Produces a new promise that will be fulfilled
+     * independently if this promise is fulfilled. If this promise is fulfilled,
+     * a new promise is produced and placed upstream of the returned promise. If
+     * this promise is broken, the returned promise is broken immediately and
+     * the mapping function is not invoked.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
+     *
+     * @param <R>
+     *            produced promise's value type.
+     *
+     * @param mf
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @return new promise of the transformed value.
+     *
+     */
+    public <R> Promise<R> flatMapX(
+            final FunctionX<? super T, Promise<? extends R>, ?> mf) {
+
         Objects.requireNonNull(mf);
 
         final Promise<R> rval = new Promise<>();
@@ -355,6 +386,33 @@ public final class Promise<T> {
      * @return promise of transformed value.
      */
     public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+
+        return mapX(f == null ? null : v -> f.apply(v));
+
+    }
+
+    /**
+     * <p>
+     * Transform the value. Produces a new promise that will be fulfilled or
+     * broken as the original.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
+     *
+     * @param <R>
+     *            the resulting promise's value type.
+     *
+     * @param f
+     *            mapping function. This is invoked only if the original promise
+     *            is fulfilled. Must not be null although the implementation is
+     *            not required to check for a null value if it can determine it
+     *            will not be invoked.
+     *
+     * @return promise of transformed value.
+     */
+    public <R> Promise<R> mapX(final FunctionX<? super T, ? extends R, ?> f) {
 
         Objects.requireNonNull(f);
 
