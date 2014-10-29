@@ -95,6 +95,23 @@ public class AsyncFlatMapTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.outer.promise().flatMap(v -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(12);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFlatMapBroken() {
 
         this.m.on(Throwable.class, this.c);

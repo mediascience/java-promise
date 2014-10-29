@@ -193,7 +193,13 @@ public final class Promise<T> {
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (x == null) {
-                    final Promise<? extends R> upstream = mf.apply(value);
+                    final Promise<? extends R> upstream;
+                    try {
+                        upstream = mf.apply(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
                     upstream.forEach(rval::succeed);
                     upstream.on(Throwable.class, rval::fail);
                 } else {
