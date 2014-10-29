@@ -89,10 +89,16 @@ A map simply transforms the promise's value when it is fulfilled. If
 the promise is broken, the transformation is not performed.
 
 ```java
-Promise.of(75).map(i -> i * 2).forEach(System.out::println); // prints 150
+final AtomicInteger vcap = new AtomicInteger();
+Promise.of(75).map(i -> i * 2).forEach(vcap::set);
+assert vcap.get() == 150;
 
-Promise.<Integer> broken(new RuntimeException()).map(i -> i * 2)
-        .on(Throwable.class, Throwable::printStackTrace); // prints stack trace
+final AtomicReference<Object> ecap = new AtomicReference<>();
+final Exception x = new RuntimeException();
+Promise.<Integer>broken(x)
+    .map(i -> i * 2) // lambda expr not invoked
+    .on(Throwable.class, ecap::set);
+assert ecap.get() == x;
 ```
 
 ### Flat Map
