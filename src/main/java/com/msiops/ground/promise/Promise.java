@@ -140,33 +140,7 @@ public final class Promise<T> {
      */
     public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
 
-        Objects.requireNonNull(src);
-
-        final Promise<R> rval = new Promise<>();
-
-        final Link<T> link = new Link<T>() {
-            @Override
-            public void next(final T value, final Throwable x) throws Throwable {
-
-                final Promise<? extends R> upstream;
-                try {
-                    upstream = src.get();
-                } catch (final Throwable t) {
-                    rval.fail(t);
-                    return;
-                }
-                /*
-                 * don't care about success or failure
-                 */
-                upstream.forEach(rval::succeed);
-                upstream.on(Throwable.class, rval::fail);
-
-            }
-        };
-
-        dispatch(link);
-
-        return rval;
+        return deferX(src == null ? null : () -> src.get());
     }
 
     /**
@@ -302,32 +276,7 @@ public final class Promise<T> {
      */
     public void forEach(final Consumer<? super T> h) {
 
-        Objects.requireNonNull(h);
-
-        final Link<T> link = new Link<T>() {
-            @Override
-            public void next(final T value, final Throwable x) throws Throwable {
-                if (x == null) {
-                    /*
-                     * not an error so invoke the handler.
-                     */
-                    try {
-                        h.accept(value);
-                    } catch (final Throwable err) {
-                        /*
-                         * silently ignore error in terminal continuation. See
-                         * issue #9.
-                         */
-                    }
-                }
-                /*
-                 * else nothing to do
-                 */
-
-            }
-        };
-
-        dispatch(link);
+        forEachX(h == null ? null : v -> h.accept(v));
 
     }
 
@@ -467,27 +416,7 @@ public final class Promise<T> {
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
 
-        Objects.requireNonNull(sel);
-        Objects.requireNonNull(h);
-
-        final Link<T> link = new Link<T>() {
-            @Override
-            public void next(final T value, final Throwable x) throws Throwable {
-
-                if (sel.isInstance(x)) {
-                    try {
-                        h.accept(sel.cast(x));
-                    } catch (final Throwable err) {
-                        /*
-                         * silently ignore error in terminal continuation. See
-                         * issue #9.
-                         */
-                    }
-                }
-            }
-        };
-
-        dispatch(link);
+        onX(sel, h == null ? null : x -> h.accept(x));
 
     }
 
