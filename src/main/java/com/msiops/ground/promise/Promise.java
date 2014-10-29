@@ -333,6 +333,59 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Emit the value of this promise. If the promise is fulfilled when this is
+     * invoked, the handler is invoked immediately with the value. If this
+     * promise is broken now or in the future, the handler is ignored. If this
+     * promise is incomplete, the handler will be invoked if the promise becomes
+     * fulfilled later.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown from the handler is silently ignored.
+     * </p>
+     *
+     *
+     * @param h
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
+     *
+     * @throws NullPointerException
+     *             if the handler is null and the promise is not broken.
+     */
+    public void forEachX(final ConsumerX<? super T, ?> h) {
+
+        Objects.requireNonNull(h);
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+                if (x == null) {
+                    /*
+                     * not an error so invoke the handler.
+                     */
+                    try {
+                        h.accept(value);
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
+                }
+                /*
+                 * else nothing to do
+                 */
+
+            }
+        };
+
+        dispatch(link);
+
+    }
+
+    /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled or
      * broken as the original.
      * </p>
@@ -413,6 +466,62 @@ public final class Promise<T> {
      */
     public <X extends Throwable> void on(final Class<X> sel,
             final Consumer<? super X> h) {
+
+        Objects.requireNonNull(sel);
+        Objects.requireNonNull(h);
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                if (sel.isInstance(x)) {
+                    try {
+                        h.accept(sel.cast(x));
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
+                }
+            }
+        };
+
+        dispatch(link);
+
+    }
+
+    /**
+     * <p>
+     * Emit the error of this promise. If the promise is broken when this is
+     * invoked, the handler is invoked immediately with the error. If this is
+     * promise is fulfilled now or in the future, the handler is ignored. If
+     * this promise is incomplete, the handler will be invoked if the promise is
+     * broken later.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown from the handler is silently ignored.
+     * </p>
+     *
+     * @param <X>
+     *            type of throwable to handle.
+     *
+     * @param sel
+     *            exception selector. The consumer will be called only if the
+     *            error is an instance of this type.
+     *
+     * @param h
+     *            value handler. Must not be null although the implementation is
+     *            permitted to accept a null value if it can determine it will
+     *            not be invoked.
+     *
+     * @throws NullPointerException
+     *             if the handler or selector is null and the promise is not
+     *             fulfilled.
+     */
+    public <X extends Throwable> void onX(final Class<X> sel,
+            final ConsumerX<? super X, ?> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
