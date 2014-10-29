@@ -423,6 +423,8 @@ public final class Promise<T> {
                                     .forEach(b -> {
                                         if (b) {
                                             proceed(value);
+                                        } else {
+                                            rval.fail(x);
                                         }
                                     });
                         });
