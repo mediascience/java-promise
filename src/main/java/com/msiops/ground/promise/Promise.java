@@ -171,6 +171,58 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Perform on completion. Produce a new promise tied to any completion
+     * outcome, fulfill or break, of this promise.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
+     *
+     * @param <R>
+     *            returned promise's value type.
+     *
+     * @param src
+     *            a promise supplier. The supplier is invoked only when this
+     *            promise becomes complete. The supplied promise is inserted
+     *            upstream to the returned promise.
+     *
+     * @return promise to compute a new value when this promise complete.
+     */
+    public <R> Promise<R> deferX(final SupplierX<Promise<? extends R>, ?> src) {
+
+        Objects.requireNonNull(src);
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) throws Throwable {
+
+                final Promise<? extends R> upstream;
+                try {
+                    upstream = src.get();
+                } catch (final Throwable t) {
+                    rval.fail(t);
+                    return;
+                }
+                /*
+                 * don't care about success or failure
+                 */
+                upstream.forEach(rval::succeed);
+                upstream.on(Throwable.class, rval::fail);
+
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+
+    }
+
+    /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled
      * independently if this promise is fulfilled. If this promise is fulfilled,
      * a new promise is produced and placed upstream of the returned promise. If
