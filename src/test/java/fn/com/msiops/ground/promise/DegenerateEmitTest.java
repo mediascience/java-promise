@@ -122,15 +122,6 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleNull() {
-
-        Promise.of(null).forEach(this.c);
-
-        verify(this.c).accept(null);
-
-    }
-
-    @Test
     public void testFulfilledHandleValue() {
 
         this.pfulfilled.forEach(this.c);

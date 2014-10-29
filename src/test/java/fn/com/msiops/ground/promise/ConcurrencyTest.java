@@ -18,6 +18,7 @@ package fn.com.msiops.ground.promise;
 
 import static org.junit.Assert.*;
 
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -347,7 +348,8 @@ public class ConcurrencyTest {
         final CountDownLatch start = new CountDownLatch(1);
         final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
 
-        final String expected = "HI";
+        final String rval = "HI";
+        final Optional<String> expected = Optional.of(rval);
         final Async<Integer> a = new Async<>();
         final Promise<Integer> p = a.promise();
 
@@ -362,7 +364,7 @@ public class ConcurrencyTest {
                     public void run() {
                         try {
                             Thread.sleep(100);
-                            inner.succeed(expected);
+                            inner.succeed(rval);
                         } catch (final InterruptedException e) {
                             Thread.currentThread().interrupt();
                         } finally {

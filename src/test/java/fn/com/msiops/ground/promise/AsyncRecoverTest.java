@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -35,7 +36,7 @@ public class AsyncRecoverTest {
     private Async<Object> inner;
     private Async<Integer> outer;
 
-    private Promise<Object> r;
+    private Promise<Optional<Object>> r;
 
     private Function<Exception, Promise<Object>> rf;
 
@@ -93,7 +94,7 @@ public class AsyncRecoverTest {
         this.inner.succeed(this.rvalue);
 
         verify(this.rf, times(1)).apply(any());
-        verify(this.c, times(2)).accept(this.rvalue);
+        verify(this.c, times(2)).accept(Optional.of(this.rvalue));
 
     }
 
@@ -129,7 +130,7 @@ public class AsyncRecoverTest {
 
         this.inner.succeed(this.rvalue);
 
-        verify(this.c).accept(this.rvalue);
+        verify(this.c).accept(Optional.of(this.rvalue));
 
     }
 
@@ -153,17 +154,20 @@ public class AsyncRecoverTest {
 
     }
 
-    /*
-     * This is the case for cancellation. Without cancel, there is no way to
-     * observe upstream success from the recovery chain.
-     */
     @Test
     public void testFulfilled() {
+
+        this.r.forEach(this.c);
 
         this.outer.succeed(this.value);
 
         verify(this.rf, never()).apply(any());
-        verify(this.c, never()).accept(any());
+
+        /*
+         * fulfillment of the original is signaled with an empty fulfillment of
+         * the recover promise.
+         */
+        verify(this.c).accept(Optional.empty());
 
     }
 
