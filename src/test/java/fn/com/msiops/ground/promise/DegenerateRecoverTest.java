@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -89,7 +90,7 @@ public class DegenerateRecoverTest {
         this.inner.succeed(this.rvalue);
 
         verify(this.rf, times(1)).apply(any());
-        verify(this.c, times(2)).accept(this.rvalue);
+        verify(this.c, times(2)).accept(Optional.of(this.rvalue));
 
     }
 
@@ -125,7 +126,7 @@ public class DegenerateRecoverTest {
 
         this.inner.succeed(this.rvalue);
 
-        verify(this.c).accept(this.rvalue);
+        verify(this.c).accept(Optional.of(this.rvalue));
 
     }
 
@@ -157,11 +158,16 @@ public class DegenerateRecoverTest {
         /*
          * hack around eclipse bug. Javac doesn't require the lambda expression.
          */
-        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err)).on(
-                Throwable.class, this.c);
+        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err))
+                .forEach(this.c);
 
         verify(this.rf, never()).apply(any());
-        verify(this.c, never()).accept(any());
+
+        /*
+         * fulfillment of the original is signaled with an empty fulfillment of
+         * the recover promise.
+         */
+        verify(this.c).accept(Optional.empty());
 
     }
 

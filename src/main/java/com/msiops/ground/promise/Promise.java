@@ -19,6 +19,7 @@ package com.msiops.ground.promise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -319,17 +320,18 @@ public final class Promise<T> {
      *            error is compatible with this type.
      *
      * @param h
-     *            error handler.
+     *            error handler. This returns a promise
      *
      * @return new promise to recover from failure.
      */
-    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
+    public <R, X extends Throwable> Promise<Optional<R>> recover(
+            final Class<X> sel,
             final Function<? super X, Promise<? extends R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
 
-        final Promise<R> rval = new Promise<>();
+        final Promise<Optional<R>> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -340,8 +342,10 @@ public final class Promise<T> {
                      * only respond to selected failure
                      */
                     final Promise<? extends R> upstream = h.apply(sel.cast(x));
-                    upstream.forEach(rval::succeed);
+                    upstream.forEach(v -> rval.succeed(Optional.<R> of(v)));
                     upstream.on(Throwable.class, rval::fail);
+                } else {
+                    rval.succeed(Optional.empty());
                 }
 
             }
