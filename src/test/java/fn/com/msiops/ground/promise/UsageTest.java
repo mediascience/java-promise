@@ -39,6 +39,24 @@ public class UsageTest {
         a.succeed(new RuntimeException());
     }
 
+    @Test
+    public void testAsyncBrokenThrowsHandlerExceptionsBackToFail() {
+
+        final Async<?> async = new Async<>();
+
+        async.promise().on(Throwable.class, x -> {
+            throw new RuntimeException();
+        });
+
+        try {
+            async.fail(new Exception());
+            fail("should throw");
+        } catch (final RuntimeException x) {
+            // OK
+        }
+
+    }
+
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
@@ -51,6 +69,24 @@ public class UsageTest {
         final Async<Object> a = new Async<>();
         a.succeed(new RuntimeException());
         a.succeed(25);
+    }
+
+    @Test
+    public void testAsyncFulfilledThrowsHandlerExceptionsBackToSucceed() {
+
+        final Async<Integer> async = new Async<>();
+
+        async.promise().forEach(v -> {
+            throw new RuntimeException();
+        });
+
+        try {
+            async.succeed(12);
+            fail("should throw");
+        } catch (final RuntimeException x) {
+            // OK
+        }
+
     }
 
     @Test(expected = IllegalStateException.class)

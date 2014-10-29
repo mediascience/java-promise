@@ -540,6 +540,8 @@ public final class Promise<T> {
         links.forEach(l -> {
             try {
                 l.next(this.value, this.error);
+            } catch (Error | RuntimeException e) {
+                throw e;
             } catch (final Throwable e) {
                 // do nothing yet
                 // TODO figure out just what this means
