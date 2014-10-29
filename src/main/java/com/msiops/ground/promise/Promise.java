@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -399,30 +400,32 @@ public final class Promise<T> {
         final Link<T> link = new Link<T>() {
 
             final AtomicInteger rindex = new AtomicInteger();
+            final AtomicReference<Promise<? extends R>> upstream = new AtomicReference<>();
 
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (x == null) {
-                    final Promise<? extends R> upstream = mf.apply(value);
-                    upstream.forEach(rval::succeed);
-                    upstream.on(
-                            Throwable.class,
-                            ix -> {
-                                final Promise<Boolean> pretry = retry.apply(ix,
-                                        this.rindex.incrementAndGet());
-                                pretry.forEach(b -> {
-                                    if (b) {
-                                        final Promise<? extends R> upstream2 = mf
-                                                .apply(value);
-                                        upstream2.forEach(rval::succeed);
-                                    }
-                                });
-                            });
+                    proceed(value);
                 } else {
                     rval.fail(x);
                 }
 
+            }
+
+            void proceed(final T value) {
+                this.upstream.set(mf.apply(value));
+                this.upstream.get().forEach(rval::succeed);
+                this.upstream.get().on(
+                        Throwable.class,
+                        x -> {
+                            retry.apply(x, this.rindex.incrementAndGet())
+                                    .forEach(b -> {
+                                        if (b) {
+                                            proceed(value);
+                                        }
+                                    });
+                        });
             }
         };
 

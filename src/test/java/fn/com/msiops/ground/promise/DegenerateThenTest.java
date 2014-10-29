@@ -109,6 +109,23 @@ public class DegenerateThenTest {
 
     }
 
+    @Test
+    public void testSucceedsTwelfthTime() {
+
+        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
+
+        for (int i = 0; i < 11; i = i + 1) {
+            this.work.get(i).fail(this.x);
+            this.retries.get(i).succeed(true);
+        }
+        this.work.get(11).succeed(this.rvalue);
+
+        assertEquals(12, this.work.size());
+        assertEquals(11, this.retries.size());
+
+        verify(this.c).accept(this.rvalue);
+    }
+
     private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
 
         final Async<Boolean> a = new Async<>();
