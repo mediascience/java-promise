@@ -155,6 +155,22 @@ public class AsyncRecoverTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+        this.outer.promise().recover(Throwable.class, err -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.fail(new Exception());
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFulfilled() {
 
         this.r.forEach(this.c);

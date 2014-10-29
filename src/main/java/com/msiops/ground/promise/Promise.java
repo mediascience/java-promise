@@ -394,7 +394,14 @@ public final class Promise<T> {
                     /*
                      * only respond to selected failure
                      */
-                    final Promise<? extends R> upstream = h.apply(sel.cast(x));
+
+                    final Promise<? extends R> upstream;
+                    try {
+                        upstream = h.apply(sel.cast(x));
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
                     upstream.forEach(v -> rval.succeed(Optional.<R> of(v)));
                     upstream.on(Throwable.class, rval::fail);
                 } else {

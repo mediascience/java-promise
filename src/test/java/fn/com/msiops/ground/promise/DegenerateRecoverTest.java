@@ -148,6 +148,19 @@ public class DegenerateRecoverTest {
 
     }
 
+    @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.broken.recover(Throwable.class, err -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c).accept(x);
+
+    }
+
     /*
      * This is the case for cancellation. Without cancel, there is no way to
      * observe upstream success from the recovery chain.
