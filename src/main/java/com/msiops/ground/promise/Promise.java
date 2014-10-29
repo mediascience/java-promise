@@ -275,7 +275,14 @@ public final class Promise<T> {
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
                 if (x == null) {
-                    rval.succeed(f.apply(value));
+                    final R rv;
+                    try {
+                        rv = f.apply(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
+                    rval.succeed(rv);
                 } else {
                     rval.fail(x);
                 }

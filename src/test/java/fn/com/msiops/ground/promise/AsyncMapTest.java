@@ -110,6 +110,23 @@ public class AsyncMapTest {
     }
 
     @Test
+    public void testThrownExceptionSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.a.promise().map(v -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.a.succeed(12);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testTransformedOnlyOnce() {
 
         this.m.forEach(this.c);

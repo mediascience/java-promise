@@ -90,6 +90,19 @@ public class DegenerateMapTest {
     }
 
     @Test
+    public void testThrownExceptionSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.fulfilled.map(v -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testTransformedOnlyOnce() {
 
         final Promise<?> mapped = this.fulfilled.map(this.f);
