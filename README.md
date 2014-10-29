@@ -6,6 +6,29 @@ Promises for Java
 Create chains of futures as an alternative to nested
 callbacks.
 
+A promise is a future computation whose (evantual) value
+cannot be directly read. A promised value is used exclusively
+by continuations. In this implementation, several kinds of
+continuation are supported (see Usage below).
+
+A promise can be in one of three states: *incomplete*,
+*fulfilled*, or *broken*.  A promise that is fulfilled
+or broken is said to be *complete*. Once complete, a
+promise's state cannot change.
+
+A promise resulting from binding a continuation is said
+to exist *downstream* from the target promise. The
+target promise is said to exist *upstream* from the
+resulting promise. A continuation that produces a promise
+is called a *promise function*. When a promise function is
+bound downstream and subsequently invoked, the promise it
+produces is hidden to programs but its state is
+usually reflected in a promise produced when it was bound.
+The particular binding semantics define how the state
+is mapped. The hidden promise in this case is said to be
+*injected upstream*.
+
+
 ## Usage
 
 ### Include Dependencies
