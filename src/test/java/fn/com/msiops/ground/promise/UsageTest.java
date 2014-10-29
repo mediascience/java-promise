@@ -63,6 +63,13 @@ public class UsageTest {
     }
 
     @Test(expected = NullPointerException.class)
+    public void testAsyncSucceedNullIllegal() {
+
+        new Async<Object>().succeed(null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
     public void testDegenerateBrokenNullInvalid() {
 
         Promise.broken(null);
@@ -82,6 +89,13 @@ public class UsageTest {
         } catch (final RuntimeException x) {
             // OK
         }
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDegenerateFulfilledNullInvalid() {
+
+        Promise.of(null);
+
     }
 
     @Test

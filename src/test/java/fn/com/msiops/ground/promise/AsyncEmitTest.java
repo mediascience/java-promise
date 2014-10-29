@@ -135,15 +135,6 @@ public class AsyncEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleNull() {
-
-        Promise.of(null).forEach(this.c);
-
-        verify(this.c).accept(null);
-
-    }
-
-    @Test
     public void testFulfilledHandleValue() {
 
         this.p.forEach(this.c);

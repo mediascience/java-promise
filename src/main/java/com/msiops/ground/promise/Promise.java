@@ -449,7 +449,7 @@ public final class Promise<T> {
 
     void succeed(final T v) {
 
-        complete(v, null);
+        complete(Objects.requireNonNull(v), null);
 
     }
 
