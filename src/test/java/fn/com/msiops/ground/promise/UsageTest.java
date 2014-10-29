@@ -16,8 +16,6 @@
  */
 package fn.com.msiops.ground.promise;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
@@ -76,41 +74,10 @@ public class UsageTest {
 
     }
 
-    @Test
-    public void testDegenerateBrokenThrowsHandlerExceptions() {
-
-        final Promise<Integer> p = Promise.broken(new Exception());
-
-        try {
-            p.on(Exception.class, x -> {
-                throw new RuntimeException();
-            });
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
-    }
-
     @Test(expected = NullPointerException.class)
     public void testDegenerateFulfilledNullInvalid() {
 
         Promise.of(null);
-
-    }
-
-    @Test
-    public void testDegenerateFulfilledThrowsHandlerExceptions() {
-
-        final Promise<Integer> p = Promise.of(12);
-
-        try {
-            p.forEach(i -> {
-                throw new RuntimeException();
-            });
-            fail("should throw");
-        } catch (final RuntimeException x) {
-            // OK
-        }
 
     }
 

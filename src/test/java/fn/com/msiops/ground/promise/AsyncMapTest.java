@@ -19,22 +19,21 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncMapTest {
 
     private Async<Integer> a;
 
-    private Consumer<Object> c;
+    private ConsumerX<Object> c;
 
-    private Function<Integer, Object> f;
+    private FunctionX<Integer, Object> f;
 
     private Promise<Object> m;
 
@@ -45,13 +44,13 @@ public class AsyncMapTest {
     private Exception x;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final Function<Integer, Object> tf = mock(Function.class);
+        final FunctionX<Integer, Object> tf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
 
@@ -61,7 +60,7 @@ public class AsyncMapTest {
         this.x = new Exception();
 
         this.a = new Async<>();
-        this.m = this.a.promise().map(tf);
+        this.m = this.a.promise().map(v -> tf.apply(v));
 
         this.f = tf;
         this.c = tc;
@@ -82,7 +81,7 @@ public class AsyncMapTest {
     }
 
     @Test
-    public void testMapBroken() {
+    public void testMapBroken() throws Throwable {
 
         this.m.on(Throwable.class, this.c);
 
@@ -96,7 +95,7 @@ public class AsyncMapTest {
     }
 
     @Test
-    public void testMapFulfilled() {
+    public void testMapFulfilled() throws Throwable {
 
         this.m.forEach(this.c);
 
@@ -110,7 +109,24 @@ public class AsyncMapTest {
     }
 
     @Test
-    public void testTransformedOnlyOnce() {
+    public void testThrownExceptionSentDownstream() throws Throwable {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.a.promise().map(v -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.a.succeed(12);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
+    public void testTransformedOnlyOnce() throws Throwable {
 
         this.m.forEach(this.c);
         this.m.forEach(this.c);

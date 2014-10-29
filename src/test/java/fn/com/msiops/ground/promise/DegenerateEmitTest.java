@@ -19,16 +19,15 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
-
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class DegenerateEmitTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object> c;
 
     private Promise<Integer> pfulfilled, pbroken;
 
@@ -40,7 +39,7 @@ public class DegenerateEmitTest {
     public void setup() {
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.x = new Exception();
 
@@ -53,7 +52,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBokenDoesNotEmitValue() {
+    public void testBokenDoesNotEmitValue() throws Throwable {
 
         this.pbroken.forEach(this.c);
 
@@ -62,7 +61,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBrokenHandleError() {
+    public void testBrokenHandleError() throws Throwable {
 
         this.pbroken.on(Throwable.class, this.c);
 
@@ -71,7 +70,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBrokenHandleErrorMultiple() {
+    public void testBrokenHandleErrorMultiple() throws Throwable {
 
         this.pbroken.on(Throwable.class, this.c);
         this.pbroken.on(Throwable.class, this.c);
@@ -81,7 +80,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBrokenHandleSelectedError() {
+    public void testBrokenHandleSelectedError() throws Throwable {
 
         this.pbroken.on(Exception.class, this.c);
 
@@ -90,7 +89,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testBrokenNotHandleNotSelectedError() {
+    public void testBrokenNotHandleNotSelectedError() throws Throwable {
 
         this.pbroken.on(RuntimeException.class, this.c);
 
@@ -113,7 +112,16 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledDoesNotEmitError() {
+    public void testForEachFnErrorIgnored() {
+
+        this.pfulfilled.forEach(v -> {
+            throw new RuntimeException();
+        });
+
+    }
+
+    @Test
+    public void testFulfilledDoesNotEmitError() throws Throwable {
 
         this.pfulfilled.on(Throwable.class, this.c);
 
@@ -122,7 +130,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleValue() {
+    public void testFulfilledHandleValue() throws Throwable {
 
         this.pfulfilled.forEach(this.c);
 
@@ -131,7 +139,7 @@ public class DegenerateEmitTest {
     }
 
     @Test
-    public void testFulfilledHandleValueMultiple() {
+    public void testFulfilledHandleValueMultiple() throws Throwable {
 
         this.pfulfilled.forEach(this.c);
         this.pfulfilled.forEach(this.c);
@@ -144,6 +152,15 @@ public class DegenerateEmitTest {
     public void testFulfilledNullConsumerIllegal() {
 
         this.pfulfilled.forEach(null);
+
+    }
+
+    @Test
+    public void testOnFnErrorIgnored() {
+
+        this.pbroken.on(Throwable.class, err -> {
+            throw new RuntimeException();
+        });
 
     }
 

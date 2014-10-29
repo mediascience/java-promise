@@ -22,17 +22,17 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncThenTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object> c;
 
     private Async<Integer> outer;
 
@@ -55,7 +55,7 @@ public class AsyncThenTest {
         this.retries = new ArrayList<>();
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
 
@@ -71,7 +71,24 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testFromBroken() {
+    public void testContinuationErrorSentDownstream() throws Throwable {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.outer.promise().then(v -> {
+            throw x;
+        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(this.value);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
+    public void testFromBroken() throws Throwable {
 
         this.r.on(Throwable.class, this.c);
 
@@ -101,7 +118,7 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testGiveUp() {
+    public void testGiveUp() throws Throwable {
 
         final int workLimit = 5;
 
@@ -133,7 +150,7 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testGiveUpWithExplicitError() {
+    public void testGiveUpWithExplicitError() throws Throwable {
 
         final int workLimit = 5;
 
@@ -181,7 +198,27 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testSucceedsFirstTime() {
+    public void testRetryErrorSentDownstream() throws Throwable {
+
+        final RuntimeException x = new RuntimeException();
+        final RuntimeException rx = new RuntimeException();
+
+        this.outer.promise().then(v -> {
+            throw x;
+        }, (err, u) -> {
+            throw rx;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(this.value);
+
+        verify(this.c).accept(rx);
+
+    }
+
+    @Test
+    public void testSucceedsFirstTime() throws Throwable {
 
         this.r.forEach(this.c);
 
@@ -202,7 +239,7 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testSucceedsSecondTime() {
+    public void testSucceedsSecondTime() throws Throwable {
 
         this.r.forEach(this.c);
 
@@ -225,7 +262,7 @@ public class AsyncThenTest {
     }
 
     @Test
-    public void testSucceedsTwelfthTime() {
+    public void testSucceedsTwelfthTime() throws Throwable {
 
         this.r.forEach(this.c);
 

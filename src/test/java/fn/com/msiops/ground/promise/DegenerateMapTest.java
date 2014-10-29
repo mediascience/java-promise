@@ -19,17 +19,17 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 
 public class DegenerateMapTest {
 
-    private Consumer<Object> c;
+    private ConsumerX<Object> c;
 
     private Function<Integer, Object> f;
 
@@ -48,7 +48,7 @@ public class DegenerateMapTest {
         final Function<Integer, Object> tf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);
@@ -72,27 +72,40 @@ public class DegenerateMapTest {
     }
 
     @Test
-    public void testMapBroken() {
+    public void testMapBroken() throws Throwable {
 
-        this.broken.map(this.f).on(Throwable.class, this.c);
+        this.broken.map(v -> this.f.apply(v)).on(Throwable.class, this.c);
 
         verify(this.c).accept(this.x);
 
     }
 
     @Test
-    public void testMapFulfilled() {
+    public void testMapFulfilled() throws Throwable {
 
-        this.fulfilled.map(this.f).forEach(this.c);
+        this.fulfilled.map(v -> this.f.apply(v)).forEach(this.c);
 
         verify(this.c).accept(this.rvalue);
 
     }
 
     @Test
-    public void testTransformedOnlyOnce() {
+    public void testThrownExceptionSentDownstream() throws Throwable {
 
-        final Promise<?> mapped = this.fulfilled.map(this.f);
+        final RuntimeException x = new RuntimeException();
+
+        this.fulfilled.map(v -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
+    public void testTransformedOnlyOnce() throws Throwable {
+
+        final Promise<?> mapped = this.fulfilled.map(v -> this.f.apply(v));
 
         mapped.forEach(this.c);
         mapped.forEach(this.c);

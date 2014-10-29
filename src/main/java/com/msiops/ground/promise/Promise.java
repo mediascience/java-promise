@@ -22,10 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * <p>
@@ -119,8 +116,14 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Perform on completion. Produce a new promise tied to any completion
      * outcome, fulfill or break, of this promise.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            returned promise's value type.
@@ -132,7 +135,7 @@ public final class Promise<T> {
      *
      * @return promise to compute a new value when this promise complete.
      */
-    public <R> Promise<R> defer(final Supplier<Promise<? extends R>> src) {
+    public <R> Promise<R> defer(final SupplierX<Promise<? extends R>> src) {
 
         Objects.requireNonNull(src);
 
@@ -142,7 +145,13 @@ public final class Promise<T> {
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
 
-                final Promise<? extends R> upstream = src.get();
+                final Promise<? extends R> upstream;
+                try {
+                    upstream = src.get();
+                } catch (final Throwable t) {
+                    rval.fail(t);
+                    return;
+                }
                 /*
                  * don't care about success or failure
                  */
@@ -155,14 +164,21 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+
     }
 
     /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled
      * independently if this promise is fulfilled. If this promise is fulfilled,
      * a new promise is produced and placed upstream of the returned promise. If
      * this promise is broken, the returned promise is broken immediately and
      * the mapping function is not invoked.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            produced promise's value type.
@@ -176,7 +192,7 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> flatMap(
-            final Function<? super T, Promise<? extends R>> mf) {
+            final FunctionX<? super T, Promise<? extends R>> mf) {
 
         Objects.requireNonNull(mf);
 
@@ -187,7 +203,13 @@ public final class Promise<T> {
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (x == null) {
-                    final Promise<? extends R> upstream = mf.apply(value);
+                    final Promise<? extends R> upstream;
+                    try {
+                        upstream = mf.apply(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
                     upstream.forEach(rval::succeed);
                     upstream.on(Throwable.class, rval::fail);
                 } else {
@@ -212,9 +234,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * {@link Throwable Throwables} thrown by the handler are thrown to the
-     * caller if this promise is already fulfilled. Otherwise, they are thrown
-     * to the fulfilling caller. (TODO is this the best way?)
+     * Any {@link Throwable} thrown from the handler is silently ignored.
      * </p>
      *
      *
@@ -226,7 +246,7 @@ public final class Promise<T> {
      * @throws NullPointerException
      *             if the handler is null and the promise is not broken.
      */
-    public void forEach(final Consumer<? super T> h) {
+    public void forEach(final ConsumerX<? super T> h) {
 
         Objects.requireNonNull(h);
 
@@ -237,7 +257,14 @@ public final class Promise<T> {
                     /*
                      * not an error so invoke the handler.
                      */
-                    h.accept(value);
+                    try {
+                        h.accept(value);
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
                 }
                 /*
                  * else nothing to do
@@ -251,8 +278,14 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled or
      * broken as the original.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            the resulting promise's value type.
@@ -265,7 +298,7 @@ public final class Promise<T> {
      *
      * @return promise of transformed value.
      */
-    public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+    public <R> Promise<R> map(final FunctionX<? super T, ? extends R> f) {
 
         Objects.requireNonNull(f);
 
@@ -275,7 +308,14 @@ public final class Promise<T> {
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
                 if (x == null) {
-                    rval.succeed(f.apply(value));
+                    final R rv;
+                    try {
+                        rv = f.apply(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
+                    rval.succeed(rv);
                 } else {
                     rval.fail(x);
                 }
@@ -298,9 +338,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * {@link Throwable Throwables} thrown by the handler are thrown to the
-     * caller if this promise is already broken. Otherwise, they are thrown to
-     * the breaking caller. (TODO is this the best way?)
+     * Any {@link Throwable} thrown from the handler is silently ignored.
      * </p>
      *
      * @param <X>
@@ -320,7 +358,7 @@ public final class Promise<T> {
      *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
-            final Consumer<? super X> h) {
+            final ConsumerX<? super X> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
@@ -330,9 +368,15 @@ public final class Promise<T> {
             public void next(final T value, final Throwable x) throws Throwable {
 
                 if (sel.isInstance(x)) {
-                    h.accept(sel.cast(x));
+                    try {
+                        h.accept(sel.cast(x));
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
                 }
-
             }
         };
 
@@ -341,7 +385,13 @@ public final class Promise<T> {
     }
 
     /**
+     * <p>
      * Recover from failure. Produces a promise tied to this promise's failure.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
      *
      * @param <R>
      *            returned promise's value type.
@@ -360,7 +410,7 @@ public final class Promise<T> {
      */
     public <R, X extends Throwable> Promise<Optional<R>> recover(
             final Class<X> sel,
-            final Function<? super X, Promise<? extends R>> h) {
+            final FunctionX<? super X, Promise<? extends R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
@@ -375,7 +425,14 @@ public final class Promise<T> {
                     /*
                      * only respond to selected failure
                      */
-                    final Promise<? extends R> upstream = h.apply(sel.cast(x));
+
+                    final Promise<? extends R> upstream;
+                    try {
+                        upstream = h.apply(sel.cast(x));
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
                     upstream.forEach(v -> rval.succeed(Optional.<R> of(v)));
                     upstream.on(Throwable.class, rval::fail);
                 } else {
@@ -412,6 +469,12 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
+     * Any {@link Throwable} thrown by the continuation causes a retry check.
+     * Any {@link Throwable} thrown by the retry function prevents further
+     * retries with the retry function's exceptions sent downstream as failure.
+     * </p>
+     *
+     * <p>
      * If retry is not required, use {@link #flatMap(Function)} instead.
      * </p>
      *
@@ -430,8 +493,8 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> then(
-            final Function<? super T, Promise<? extends R>> mf,
-            final BiFunction<Throwable, Integer, Promise<Boolean>> retry) {
+            final FunctionX<? super T, Promise<? extends R>> mf,
+            final BiFunctionX<Throwable, Integer, Promise<Boolean>> retry) {
 
         Objects.requireNonNull(mf);
         Objects.requireNonNull(retry);
@@ -454,23 +517,33 @@ public final class Promise<T> {
 
             }
 
-            void proceed(final T value) {
-                this.upstream.set(mf.apply(value));
+            private void maybeRetry(final Throwable x) {
+                final Promise<Boolean> pretry;
+                try {
+                    pretry = retry.apply(x, this.rindex.incrementAndGet());
+                } catch (final Throwable t) {
+                    rval.fail(t);
+                    return;
+                }
+                pretry.forEach(b -> {
+                    if (b) {
+                        proceed(Promise.this.value);
+                    } else {
+                        rval.fail(x);
+                    }
+                });
+                pretry.on(Throwable.class, rval::fail);
+            }
+
+            private void proceed(final T value) {
+                try {
+                    this.upstream.set(mf.apply(value));
+                } catch (final Throwable t) {
+                    maybeRetry(t);
+                    return;
+                }
                 this.upstream.get().forEach(rval::succeed);
-                this.upstream.get().on(
-                        Throwable.class,
-                        x -> {
-                            final Promise<Boolean> pretry = retry.apply(x,
-                                    this.rindex.incrementAndGet());
-                            pretry.forEach(b -> {
-                                if (b) {
-                                    proceed(value);
-                                } else {
-                                    rval.fail(x);
-                                }
-                            });
-                            pretry.on(Throwable.class, rval::fail);
-                        });
+                this.upstream.get().on(Throwable.class, this::maybeRetry);
             }
         };
 
@@ -509,9 +582,9 @@ public final class Promise<T> {
         links.forEach(l -> {
             try {
                 l.next(this.value, this.error);
-            } catch (final Throwable e) {
-                // do nothing yet
-                // TODO figure out just what this means
+            } catch (final Throwable err) {
+                throw new AssertionError("unexpected error back-propagation",
+                        err);
             }
         });
     }
@@ -529,11 +602,9 @@ public final class Promise<T> {
         if (immediate) {
             try {
                 link.next(this.value, this.error);
-            } catch (Error | RuntimeException x) {
-                throw x;
-            } catch (final Throwable x) {
-                // do nothing yet
-                // TODO figure out just what this means
+            } catch (final Throwable err) {
+                throw new AssertionError("unexpected error back-propagation",
+                        err);
             }
         }
     }
