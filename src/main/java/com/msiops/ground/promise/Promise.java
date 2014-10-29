@@ -27,6 +27,37 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * <p>
+ * A promise is a future computation whose (evantual) value cannot be directly
+ * read. A promised value is used exclusively by continuations. In this
+ * implementation, several kinds of continuation are supported (see Usage
+ * below).
+ * </p>
+ *
+ * <p>
+ * A promise can be in one of three states: <em>incomplete</em>,
+ * <em>fulfilled</em>, or <em>broken</em>. A promise that is fulfilled or broken
+ * is said to be <em>complete</em>. Once complete, a promise's state cannot
+ * change.
+ * </p>
+ *
+ * <p>
+ * A promise resulting from binding a continuation is said to exist
+ * <em>downstream</em> from the target promise. The target promise is said to
+ * exist <em>upstream</em> from the resulting promise. A continuation that
+ * produces a promise is called a <em>promise function</em>. When a promise
+ * function is bound downstream and subsequently invoked, the promise it
+ * produces is hidden to programs but its state is usually reflected in a
+ * promise produced when it was bound. The particular binding semantics define
+ * how the state is mapped. The hidden promise in this case is said to be
+ * <em>injected upstream</em>.
+ * </p>
+ *
+ *
+ * @param <T>
+ *            promised value type.
+ */
 public final class Promise<T> {
 
     /**
@@ -59,9 +90,12 @@ public final class Promise<T> {
      *            value type.
      *
      * @param v
-     *            fulfillment value. May be null.
+     *            fulfillment value. Must not be null.
      *
      * @return created promise.
+     *
+     * @throws NullPointerException
+     *             if argument is null.
      *
      */
     public static <R> Promise<R> of(final R v) {
