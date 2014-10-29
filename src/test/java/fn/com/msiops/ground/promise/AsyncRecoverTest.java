@@ -164,7 +164,7 @@ public class AsyncRecoverTest {
 
         verify(this.c, never()).accept(any());
 
-        this.outer.fail(new Exception());
+        this.outer.fail(this.x);
 
         verify(this.c).accept(x);
 
