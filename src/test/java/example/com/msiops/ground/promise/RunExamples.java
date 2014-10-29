@@ -46,6 +46,10 @@ public final class RunExamples {
 
     }
 
+    public static void runExamplesSilently() {
+        EXAMPLES.forEach(Runnable::run);
+    }
+
     private static void runExample(final Example x) {
 
         try {
@@ -57,4 +61,5 @@ public final class RunExamples {
         }
 
     }
+
 }
