@@ -142,7 +142,13 @@ public final class Promise<T> {
             @Override
             public void next(final T value, final Throwable x) throws Throwable {
 
-                final Promise<? extends R> upstream = src.get();
+                final Promise<? extends R> upstream;
+                try {
+                    upstream = src.get();
+                } catch (final Throwable t) {
+                    rval.fail(t);
+                    return;
+                }
                 /*
                  * don't care about success or failure
                  */

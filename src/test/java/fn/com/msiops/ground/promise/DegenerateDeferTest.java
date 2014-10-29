@@ -124,6 +124,19 @@ public class DegenerateDeferTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+
+        this.fulfilled.defer(() -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFulfilledDeferBroken() {
 
         /*

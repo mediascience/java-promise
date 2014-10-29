@@ -16,6 +16,7 @@
  */
 package fn.com.msiops.ground.promise;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.function.Consumer;
@@ -133,6 +134,22 @@ public class AsyncDeferTest {
     }
 
     @Test
+    public void testContinuationErrorSentDownstream() {
+
+        final RuntimeException x = new RuntimeException();
+        this.outer.promise().defer(() -> {
+            throw x;
+        }).on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(this.value);
+
+        verify(this.c).accept(x);
+
+    }
+
+    @Test
     public void testFulfilledDeferBroken() {
 
         this.d.on(Throwable.class, this.c);
@@ -197,4 +214,5 @@ public class AsyncDeferTest {
         this.outer.promise().defer(null);
 
     }
+
 }
