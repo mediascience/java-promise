@@ -475,7 +475,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * If retry is not required, use {@link #flatMap(Function)} instead.
+     * If retry is not required, use {@link #flatMap(FunctionX)} instead.
      * </p>
      *
      * @param <R>
