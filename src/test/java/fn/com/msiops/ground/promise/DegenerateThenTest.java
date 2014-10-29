@@ -79,6 +79,20 @@ public class DegenerateThenTest {
 
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testFulfilledNullPromiseFunIllegal() {
+
+        this.fulfilled.then(null, this::doRetry);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testFulfilledNullRetryFunIllegal() {
+
+        this.fulfilled.then(this::doWork, null);
+
+    }
+
     @Test
     public void testGiveUp() {
 

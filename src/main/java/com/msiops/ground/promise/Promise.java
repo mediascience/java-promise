@@ -395,6 +395,8 @@ public final class Promise<T> {
             final Function<? super T, Promise<? extends R>> mf,
             final BiFunction<Throwable, Integer, Promise<Boolean>> retry) {
 
+        Objects.requireNonNull(retry);
+
         final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
