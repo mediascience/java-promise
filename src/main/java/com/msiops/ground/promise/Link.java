@@ -24,9 +24,16 @@ package com.msiops.ground.promise;
 interface Link<T> {
 
     /**
-     * Pass successful result to next element in the chain. This method must be
-     * invoked no more than once although the implementation is not required
-     * detect multiple invocations.
+     * <p>
+     * Pass result downstream. This method must be invoked no more than once
+     * although the implementation is not required detect multiple invocations.
+     * </p>
+     *
+     * <p>
+     * This method is not allowed to throw anything. Any error generated during
+     * continuation should be sent downstream. Behavior when this method throws
+     * is undefined.
+     * </p>
      *
      * @param value
      *            value to pass if successful. may be null.
@@ -37,9 +44,7 @@ interface Link<T> {
      *            the result is considered successful and the value argument is
      *            passed on, even if it is null.
      *
-     * @throws Throwable
-     *             if a downstream handler throws.
      */
-    void next(T value, Throwable x) throws Throwable;
+    void next(T value, Throwable x);
 
 }

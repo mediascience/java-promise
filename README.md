@@ -6,7 +6,7 @@ Promises for Java
 Create chains of futures as an alternative to nested
 callbacks.
 
-A promise is a future computation whose (evantual) value
+A promise is a future computation whose (eventual) value
 cannot be directly read. A promised value is used exclusively
 by continuations. In this implementation, several kinds of
 continuation are supported (see Usage below).

@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 /**
  * <p>
@@ -143,7 +142,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
 
                 final Promise<? extends R> upstream;
                 try {
@@ -200,7 +199,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
 
                 if (x == null) {
                     final Promise<? extends R> upstream;
@@ -252,7 +251,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
                 if (x == null) {
                     /*
                      * not an error so invoke the handler.
@@ -306,7 +305,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
                 if (x == null) {
                     final R rv;
                     try {
@@ -365,7 +364,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
 
                 if (sel.isInstance(x)) {
                     try {
@@ -419,7 +418,7 @@ public final class Promise<T> {
 
         final Link<T> link = new Link<T>() {
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
 
                 if (sel.isInstance(x)) {
                     /*
@@ -507,7 +506,7 @@ public final class Promise<T> {
             final AtomicReference<Promise<? extends R>> upstream = new AtomicReference<>();
 
             @Override
-            public void next(final T value, final Throwable x) throws Throwable {
+            public void next(final T value, final Throwable x) {
 
                 if (x == null) {
                     proceed(value);
