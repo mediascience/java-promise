@@ -144,7 +144,7 @@ assert cap2.get().equals("Finally!");
 
 final AtomicReference<Object> vcap = new AtomicReference<>();
 final Async<Object> inner = new Async<>();
-Promise.of(75).flatMap(i -> inner.promise())
+Promise.of(75).then(i -> inner.promise())
         .forEach(vcap::set);
 assert vcap.get() == null;
 inner.succeed("Hello");
@@ -154,7 +154,7 @@ assert vcap.get().equals("Hello");
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
 Promise.<Integer>broken(x)
-    .flatMap(i -> Promise.of("Hello")) // lambda expr not invoked
+    .then(i -> Promise.of("Hello")) // lambda expr not invoked
     .on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 

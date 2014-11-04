@@ -16,17 +16,15 @@
  */
 package fn.com.msiops.ground.promise;
 
-import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class DegenerateThenTest {
@@ -35,34 +33,58 @@ public class DegenerateThenTest {
 
     private Promise<Integer> fulfilled, broken;
 
-    private List<Async<Boolean>> retries;
+    private Async<Object> inner;
+
+    private FunctionX<Integer, Promise<Object>> mf;
 
     private Object rvalue;
 
     private Integer value;
 
-    private List<Async<Object>> work;
-
     private Exception x;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
-        this.work = new ArrayList<>();
-        this.retries = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
+
+        this.inner = new Async<>();
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);
 
         this.rvalue = "Hello";
+        when(tmf.apply(this.value)).thenReturn(this.inner.promise());
 
         this.x = new Exception();
         this.broken = Promise.broken(this.x);
 
+        this.mf = tmf;
         this.c = tc;
+
+    }
+
+    @Test
+    public void testBoundOnlyOnce() throws Throwable {
+
+        /*
+         * hack around eclipse bug. Javac doesn't require the lambda expression.
+         */
+        final Promise<?> mapped = this.fulfilled.then(i -> this.mf.apply(i));
+
+        mapped.forEach(this.c);
+        mapped.forEach(this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.inner.succeed(this.rvalue);
+
+        verify(this.mf, times(1)).apply(any());
+        verify(this.c, times(2)).accept(this.rvalue);
 
     }
 
@@ -73,169 +95,61 @@ public class DegenerateThenTest {
 
         this.fulfilled.then(v -> {
             throw x;
-        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+        }).on(Throwable.class, this.c);
 
         verify(this.c).accept(x);
 
     }
 
     @Test
-    public void testFromBroken() throws Throwable {
+    public void testFlatMapBroken() throws Throwable {
 
-        this.broken.then(this::doWork, this::doRetry).on(Throwable.class,
-                this.c);
+        /*
+         * hack around eclipse bug. Javac doesn't require the lambda expression.
+         */
+        this.broken.then(i -> this.mf.apply(i)).on(Throwable.class, this.c);
 
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
-
+        verify(this.mf, never()).apply(any());
         verify(this.c).accept(this.x);
 
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testFulfilledNullPromiseFunIllegal() {
-
-        this.fulfilled.then(null, this::doRetry);
-
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testFulfilledNullRetryFunIllegal() {
-
-        this.fulfilled.then(this::doWork, null);
-
-    }
-
     @Test
-    public void testGiveUp() throws Throwable {
+    public void testFlatMapFulfilledBroken() throws Throwable {
 
-        final int workLimit = 5;
+        /*
+         * hack around eclipse bug. Javac doesn't require the lambda expression.
+         */
+        this.fulfilled.then(i -> this.mf.apply(i)).on(Throwable.class, this.c);
 
-        this.fulfilled.then(this::doWork, this::doRetry).on(Throwable.class,
-                this.c);
+        verify(this.c, never()).accept(any());
 
-        for (int i = 0; i < workLimit - 1; i = i + 1) {
-            /*
-             * use a new exception each time so can check for specific one
-             */
-            this.work.get(i).fail(new Exception());
-            this.retries.get(i).succeed(true);
-        }
-
-        this.work.get(workLimit - 1).fail(this.x);
-        this.retries.get(workLimit - 1).succeed(false); // no more retries
-
-        assertEquals(workLimit, this.work.size());
-        assertEquals(workLimit, this.retries.size());
+        this.inner.fail(this.x);
 
         verify(this.c).accept(this.x);
 
     }
 
     @Test
-    public void testGiveUpWithExplicitError() throws Throwable {
+    public void testFlatMapFulfilledFulfilled() throws Throwable {
 
-        final int workLimit = 5;
+        /*
+         * hack around eclipse bug. Javac doesn't require the lambda expression.
+         */
+        this.fulfilled.then(i -> this.mf.apply(i)).forEach(this.c);
 
-        this.fulfilled.then(this::doWork, this::doRetry).on(Throwable.class,
-                this.c);
+        verify(this.c, never()).accept(any());
 
-        for (int i = 0; i < workLimit - 1; i = i + 1) {
-            /*
-             * use a new exception each time so can check for specific one
-             */
-            this.work.get(i).fail(new Exception());
-            this.retries.get(i).succeed(true);
-        }
-
-        final Exception myX = new RuntimeException();
-
-        this.work.get(workLimit - 1).fail(this.x);
-        this.retries.get(workLimit - 1).fail(myX); // no more retries
-
-        assertEquals(workLimit, this.work.size());
-        assertEquals(workLimit, this.retries.size());
-
-        verify(this.c).accept(myX);
-
-    }
-
-    @Test
-    public void testRetryErrorSentDownstream() throws Throwable {
-
-        final RuntimeException x = new RuntimeException();
-        final RuntimeException rx = new RuntimeException();
-
-        this.fulfilled.then(v -> {
-            throw x;
-        }, (err, u) -> {
-            throw rx;
-        }).on(Throwable.class, this.c);
-
-        verify(this.c).accept(rx);
-
-    }
-
-    @Test
-    public void testSucceedsFirstTime() throws Throwable {
-
-        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
-
-        this.work.get(0).succeed(this.rvalue);
-
-        assertEquals(1, this.work.size());
-        assertTrue(this.retries.isEmpty());
+        this.inner.succeed(this.rvalue);
 
         verify(this.c).accept(this.rvalue);
 
     }
 
-    @Test
-    public void testSucceedsSecondTime() throws Throwable {
+    @Test(expected = NullPointerException.class)
+    public void testFulfilledNullTransformedIllegal() {
 
-        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
-
-        this.work.get(0).fail(this.x);
-        this.retries.get(0).succeed(true);
-        this.work.get(1).succeed(this.rvalue);
-
-        assertEquals(2, this.work.size());
-        assertEquals(1, this.retries.size());
-
-        verify(this.c).accept(this.rvalue);
-
-    }
-
-    @Test
-    public void testSucceedsTwelfthTime() throws Throwable {
-
-        this.fulfilled.then(this::doWork, this::doRetry).forEach(this.c);
-
-        for (int i = 0; i < 11; i = i + 1) {
-            this.work.get(i).fail(this.x);
-            this.retries.get(i).succeed(true);
-        }
-        this.work.get(11).succeed(this.rvalue);
-
-        assertEquals(12, this.work.size());
-        assertEquals(11, this.retries.size());
-
-        verify(this.c).accept(this.rvalue);
-    }
-
-    private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
-
-        final Async<Boolean> a = new Async<>();
-        this.retries.add(a);
-        return a.promise();
-
-    }
-
-    private Promise<Object> doWork(final Integer i) {
-
-        final Async<Object> a = new Async<>();
-        this.work.add(a);
-        return a.promise();
+        this.fulfilled.then(null);
 
     }
 

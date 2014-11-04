@@ -16,57 +16,80 @@
  */
 package fn.com.msiops.ground.promise;
 
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
+import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 
 public class AsyncThenTest {
 
     private ConsumerX<Object> c;
 
+    private Async<Object> inner;
+
+    private Promise<Object> m;
+
+    private FunctionX<Integer, Promise<Object>> mf;
+
     private Async<Integer> outer;
-
-    private Promise<Object> r;
-
-    private List<Async<Boolean>> retries;
 
     private Object rvalue;
 
     private Integer value;
 
-    private List<Async<Object>> work;
-
     private Exception x;
 
     @Before
-    public void setup() {
+    public void setup() throws Throwable {
 
-        this.work = new ArrayList<>();
-        this.retries = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
+        this.inner = new Async<>();
+        this.outer = new Async<>();
+
         this.value = 12;
 
         this.rvalue = "Hello";
+        when(tmf.apply(this.value)).thenReturn(this.inner.promise());
 
         this.x = new Exception();
 
-        this.outer = new Async<>();
-        this.r = this.outer.promise().then(this::doWork, this::doRetry);
+        /*
+         * hack around eclipse bug. Javac doesn't require the lambda expression.
+         */
+        this.m = this.outer.promise().then(i -> tmf.apply(i));
 
+        this.mf = tmf;
         this.c = tc;
+
+    }
+
+    @Test
+    public void testBoundOnlyOnce() throws Throwable {
+
+        this.m.forEach(this.c);
+        this.m.forEach(this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.outer.succeed(this.value);
+
+        verify(this.c, never()).accept(any());
+
+        this.inner.succeed(this.rvalue);
+
+        verify(this.mf, times(1)).apply(any());
+        verify(this.c, times(2)).accept(this.rvalue);
 
     }
 
@@ -77,227 +100,77 @@ public class AsyncThenTest {
 
         this.outer.promise().then(v -> {
             throw x;
-        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+        }).on(Throwable.class, this.c);
 
         verify(this.c, never()).accept(any());
 
-        this.outer.succeed(this.value);
+        this.outer.succeed(12);
 
         verify(this.c).accept(x);
 
     }
 
     @Test
-    public void testFromBroken() throws Throwable {
+    public void testFlatMapBroken() throws Throwable {
 
-        this.r.on(Throwable.class, this.c);
+        this.m.on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
 
         this.outer.fail(this.x);
 
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
-
+        verify(this.mf, never()).apply(any());
         verify(this.c).accept(this.x);
 
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testFulfilledNullPromiseFunIllegal() {
-
-        this.outer.succeed(this.value);
-        this.outer.promise().then(null, this::doRetry);
-
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testFulfilledNullRetryFunIllegal() {
-
-        this.outer.succeed(this.value);
-        this.outer.promise().then(this::doWork, null);
-
-    }
-
     @Test
-    public void testGiveUp() throws Throwable {
+    public void testFlatMapFulfilledBroken() throws Throwable {
 
-        final int workLimit = 5;
-
-        this.r.on(Throwable.class, this.c);
-
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
+        this.m.on(Throwable.class, this.c);
 
         verify(this.c, never()).accept(any());
 
         this.outer.succeed(this.value);
 
-        for (int i = 0; i < workLimit - 1; i = i + 1) {
-            /*
-             * use a new exception each time so can check for specific one
-             */
-            this.work.get(i).fail(new Exception());
-            this.retries.get(i).succeed(true);
-        }
+        verify(this.c, never()).accept(any());
 
-        this.work.get(workLimit - 1).fail(this.x);
-        this.retries.get(workLimit - 1).succeed(false); // no more retries
-
-        assertEquals(workLimit, this.work.size());
-        assertEquals(workLimit, this.retries.size());
+        this.inner.fail(this.x);
 
         verify(this.c).accept(this.x);
 
     }
 
     @Test
-    public void testGiveUpWithExplicitError() throws Throwable {
+    public void testFlatMapFulfilledFulfilled() throws Throwable {
 
-        final int workLimit = 5;
-
-        this.r.on(Throwable.class, this.c);
-
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
+        this.m.forEach(this.c);
 
         verify(this.c, never()).accept(any());
 
         this.outer.succeed(this.value);
 
-        for (int i = 0; i < workLimit - 1; i = i + 1) {
-            /*
-             * use a new exception each time so can check for specific one
-             */
-            this.work.get(i).fail(new Exception());
-            this.retries.get(i).succeed(true);
-        }
+        verify(this.c, never()).accept(any());
 
-        final Exception myX = new RuntimeException();
+        this.inner.succeed(this.rvalue);
 
-        this.work.get(workLimit - 1).fail(this.x);
-        this.retries.get(workLimit - 1).fail(myX); // no more retries
-
-        assertEquals(workLimit, this.work.size());
-        assertEquals(workLimit, this.retries.size());
-
-        verify(this.c).accept(myX);
+        verify(this.c).accept(this.rvalue);
 
     }
 
     @Test(expected = NullPointerException.class)
-    public void testIncompleteNullPromiseFunIllegal() {
+    public void testFulfilledNullTransformedIllegal() {
 
-        this.outer.promise().then(null, this::doRetry);
+        this.outer.succeed(this.value);
+
+        this.m.then(null);
 
     }
 
     @Test(expected = NullPointerException.class)
-    public void testIncompleteNullRetryFunIllegal() {
+    public void testIncompleteNullTransformedIllegal() {
 
-        this.outer.promise().then(this::doWork, null);
-
-    }
-
-    @Test
-    public void testRetryErrorSentDownstream() throws Throwable {
-
-        final RuntimeException x = new RuntimeException();
-        final RuntimeException rx = new RuntimeException();
-
-        this.outer.promise().then(v -> {
-            throw x;
-        }, (err, u) -> {
-            throw rx;
-        }).on(Throwable.class, this.c);
-
-        verify(this.c, never()).accept(any());
-
-        this.outer.succeed(this.value);
-
-        verify(this.c).accept(rx);
-
-    }
-
-    @Test
-    public void testSucceedsFirstTime() throws Throwable {
-
-        this.r.forEach(this.c);
-
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
-
-        verify(this.c, never()).accept(any());
-
-        this.outer.succeed(this.value);
-
-        this.work.get(0).succeed(this.rvalue);
-
-        assertEquals(1, this.work.size());
-        assertTrue(this.retries.isEmpty());
-
-        verify(this.c).accept(this.rvalue);
-
-    }
-
-    @Test
-    public void testSucceedsSecondTime() throws Throwable {
-
-        this.r.forEach(this.c);
-
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
-
-        verify(this.c, never()).accept(any());
-
-        this.outer.succeed(this.value);
-
-        this.work.get(0).fail(this.x);
-        this.retries.get(0).succeed(true);
-        this.work.get(1).succeed(this.rvalue);
-
-        assertEquals(2, this.work.size());
-        assertEquals(1, this.retries.size());
-
-        verify(this.c).accept(this.rvalue);
-
-    }
-
-    @Test
-    public void testSucceedsTwelfthTime() throws Throwable {
-
-        this.r.forEach(this.c);
-
-        assertTrue(this.work.isEmpty());
-        assertTrue(this.retries.isEmpty());
-
-        verify(this.c, never()).accept(any());
-
-        this.outer.succeed(this.value);
-
-        for (int i = 0; i < 11; i = i + 1) {
-            this.work.get(i).fail(this.x);
-            this.retries.get(i).succeed(true);
-        }
-        this.work.get(11).succeed(this.rvalue);
-
-        assertEquals(12, this.work.size());
-        assertEquals(11, this.retries.size());
-
-        verify(this.c).accept(this.rvalue);
-    }
-
-    private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
-
-        final Async<Boolean> a = new Async<>();
-        this.retries.add(a);
-        return a.promise();
-
-    }
-
-    private Promise<Object> doWork(final Integer i) {
-
-        final Async<Object> a = new Async<>();
-        this.work.add(a);
-        return a.promise();
+        this.m.then(null);
 
     }
 

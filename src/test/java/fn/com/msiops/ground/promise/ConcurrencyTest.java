@@ -274,7 +274,7 @@ public class ConcurrencyTest {
                          * use mf as the argument directly, javac has no trouble
                          * with it
                          */
-                        p.flatMap(hack -> mf.apply(hack)).forEach(o -> {
+                        p.then(hack -> mf.apply(hack)).forEach(o -> {
                             if (expected.equals(o)) {
                                 emitted.incrementAndGet();
                             }
@@ -312,7 +312,7 @@ public class ConcurrencyTest {
                          * use mf as the argument directly, javac has no trouble
                          * with it
                          */
-                        p.flatMap(hack -> mf.apply(hack)).forEach(o -> {
+                        p.then(hack -> mf.apply(hack)).forEach(o -> {
                             if (expected.equals(o)) {
                                 emitted.incrementAndGet();
                             }
