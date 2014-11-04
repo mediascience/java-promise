@@ -58,10 +58,10 @@ public class DegenerateRecoverTest {
         this.inner = Promises.async();
 
         this.value = 12;
-        this.fulfilled = Promise.of(this.value);
+        this.fulfilled = Promises.fulfilled(this.value);
 
         this.x = new Exception();
-        this.broken = Promise.broken(this.x);
+        this.broken = Promises.broken(this.x);
 
         when(trf.apply(this.x)).thenReturn(this.inner.promise());
 

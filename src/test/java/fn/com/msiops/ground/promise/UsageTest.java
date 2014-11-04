@@ -19,7 +19,6 @@ package fn.com.msiops.ground.promise;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class UsageTest {
@@ -71,14 +70,14 @@ public class UsageTest {
     @Test(expected = NullPointerException.class)
     public void testDegenerateBrokenNullInvalid() {
 
-        Promise.broken(null);
+        Promises.broken(null);
 
     }
 
     @Test(expected = NullPointerException.class)
     public void testDegenerateFulfilledNullInvalid() {
 
-        Promise.of(null);
+        Promises.fulfilled(null);
 
     }
 

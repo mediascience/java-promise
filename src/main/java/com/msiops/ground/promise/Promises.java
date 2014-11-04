@@ -22,4 +22,50 @@ public interface Promises {
         return new Async<T>();
     }
 
+    /**
+     * Create a broken promise. A broken promise is in its final state.
+     *
+     * @param <R>
+     *            value type.
+     *
+     * @param x
+     *            error, must not be null.
+     *
+     * @return created promise
+     *
+     * @throws NullPointerException
+     *             if error is null.
+     *
+     */
+    public static <R> Promise<R> broken(final Throwable x) {
+
+        final Promise<R> rval = new Promise<>();
+        rval.fail(x);
+        return rval;
+
+    }
+
+    /**
+     * Create a fulfilled promise. A fulfilled promise is in its final state.
+     *
+     * @param <R>
+     *            value type.
+     *
+     * @param v
+     *            fulfillment value. Must not be null.
+     *
+     * @return created promise.
+     *
+     * @throws NullPointerException
+     *             if argument is null.
+     *
+     */
+    public static <R> Promise<R> fulfilled(final R v) {
+
+        final Promise<R> rval = new Promise<>();
+        rval.succeed(v);
+        return rval;
+
+    }
+
 }

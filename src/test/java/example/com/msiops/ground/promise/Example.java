@@ -37,13 +37,13 @@ public enum Example implements Runnable {
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-final Promise<Integer> fulfilled = Promise.of(75);
+final Promise<Integer> fulfilled = Promises.fulfilled(75);
 fulfilled.forEach(vcap::set);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-final Promise<Integer> broken = Promise.broken(x);
+final Promise<Integer> broken = Promises.broken(x);
 broken.on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 
@@ -95,8 +95,8 @@ assert ecap.get() == x;
 final Async<Object> toFulfill = Promises.async();
 final Async<Object> toBreak = Promises.async();
 
-final Supplier<Promise<String>> finalizer = () -> Promise
-        .of("Finally!");
+final Supplier<Promise<String>> finalizer = () -> Promises
+        .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
 /*
@@ -145,7 +145,7 @@ assert cap2.get().equals("Finally!");
 
 final AtomicReference<Object> vcap = new AtomicReference<>();
 final Async<Object> inner = Promises.async();
-Promise.of(75).then(i -> inner.promise())
+Promises.fulfilled(75).then(i -> inner.promise())
         .forEach(vcap::set);
 assert vcap.get() == null;
 inner.succeed("Hello");
@@ -154,8 +154,8 @@ assert vcap.get().equals("Hello");
 
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
-    .then(i -> Promise.of("Hello")) // lambda expr not invoked
+Promises.<Integer>broken(x)
+    .then(i -> Promises.fulfilled("Hello")) // lambda expr not invoked
     .on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 
@@ -174,12 +174,12 @@ assert ecap.get() == x;
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-Promise.of(75).map(i -> i * 2).forEach(vcap::set);
+Promises.fulfilled(75).map(i -> i * 2).forEach(vcap::set);
 assert vcap.get() == 150;
 
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
+Promises.<Integer>broken(x)
     .map(i -> i * 2) // lambda expr not invoked
     .on(Throwable.class, ecap::set);
 assert ecap.get() == x;
@@ -203,9 +203,9 @@ final AtomicReference<Object> ecap = new AtomicReference<>();
 final AtomicReference<Object> rcap = new AtomicReference<>();
 
 final Exception x = new RuntimeException();
-final Promise<?> p = Promise.broken(x);
+final Promise<?> p = Promises.broken(x);
 p.on(Throwable.class, ecap::set);
-p.recover(Exception.class, err -> Promise.of("Recovered!"))
+p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(rcap::set);
 
 assert ecap.get() == x;
@@ -215,9 +215,9 @@ assert rcap.get().equals(Optional.of("Recovered!"));
 final AtomicInteger vcap = new AtomicInteger();
 final AtomicReference<Object> scap = new AtomicReference<Object>();
 
-final Promise<Integer> q = Promise.of(75);
+final Promise<Integer> q = Promises.fulfilled(75);
 q.forEach(vcap::set);
-q.recover(Exception.class, err -> Promise.of("Recovered!"))
+q.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(scap::set);
 
 assert vcap.get() == 75;
@@ -240,10 +240,10 @@ final AtomicBoolean condition = new AtomicBoolean();
 final AtomicReference<Async<Boolean>> pendingRetry = new AtomicReference<Async<Boolean>>();
 final AtomicReference<Object> vcap = new AtomicReference<>();
 
-Promise.of(75)
+Promises.fulfilled(75)
     .then(i -> {
-        return condition.get() ? Promise.of("Done!")
-                : Promise.broken(new RuntimeException());
+        return condition.get() ? Promises.fulfilled("Done!")
+                : Promises.broken(new RuntimeException());
     }, (x, u) -> {
         pendingRetry.set(Promises.async());
         return pendingRetry.get().promise();

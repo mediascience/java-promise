@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class DegenerateEmitTest {
 
@@ -44,8 +45,8 @@ public class DegenerateEmitTest {
         this.x = new Exception();
 
         this.value = 12;
-        this.pfulfilled = Promise.of(this.value);
-        this.pbroken = Promise.broken(this.x);
+        this.pfulfilled = Promises.fulfilled(this.value);
+        this.pbroken = Promises.broken(this.x);
 
         this.c = tc;
 

@@ -56,12 +56,12 @@ public class DegenerateThenRetryTest {
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
-        this.fulfilled = Promise.of(this.value);
+        this.fulfilled = Promises.fulfilled(this.value);
 
         this.rvalue = "Hello";
 
         this.x = new Exception();
-        this.broken = Promise.broken(this.x);
+        this.broken = Promises.broken(this.x);
 
         this.c = tc;
 
@@ -74,7 +74,7 @@ public class DegenerateThenRetryTest {
 
         this.fulfilled.then(v -> {
             throw x;
-        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+        }, (err, u) -> Promises.fulfilled(false)).on(Throwable.class, this.c);
 
         verify(this.c).accept(x);
 

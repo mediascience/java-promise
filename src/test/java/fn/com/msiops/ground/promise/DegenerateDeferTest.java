@@ -55,13 +55,13 @@ public class DegenerateDeferTest {
         this.inner = Promises.async();
 
         this.value = 12;
-        this.fulfilled = Promise.of(this.value);
+        this.fulfilled = Promises.fulfilled(this.value);
 
         this.rvalue = "Hello";
         when(tsrc.get()).thenReturn(this.inner.promise());
 
         this.x = new Exception();
-        this.broken = Promise.broken(this.x);
+        this.broken = Promises.broken(this.x);
 
         this.ix = new IllegalArgumentException();
 

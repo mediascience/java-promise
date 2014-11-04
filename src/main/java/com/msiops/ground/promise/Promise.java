@@ -56,52 +56,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class Promise<T> {
 
-    /**
-     * Create a broken promise. The returned promise is complete.
-     *
-     * @param <R>
-     *            value type.
-     *
-     * @param x
-     *            error, must not be null.
-     *
-     * @return created promise
-     *
-     * @throws NullPointerException
-     *             if error is null.
-     *
-     */
-    public static <R> Promise<R> broken(final Throwable x) {
-
-        final Promise<R> rval = new Promise<>();
-        rval.fail(x);
-        return rval;
-
-    }
-
-    /**
-     * Create a fulfilled promise. The returned promise is complete.
-     *
-     * @param <R>
-     *            value type.
-     *
-     * @param v
-     *            fulfillment value. Must not be null.
-     *
-     * @return created promise.
-     *
-     * @throws NullPointerException
-     *             if argument is null.
-     *
-     */
-    public static <R> Promise<R> of(final R v) {
-
-        final Promise<R> rval = new Promise<>();
-        rval.succeed(v);
-        return rval;
-
-    }
-
     private boolean completed = false;
 
     private Throwable error = null;

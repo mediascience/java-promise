@@ -78,7 +78,7 @@ public class AsyncThenRetryTest {
 
         this.outer.promise().then(v -> {
             throw x;
-        }, (err, u) -> Promise.of(false)).on(Throwable.class, this.c);
+        }, (err, u) -> Promises.fulfilled(false)).on(Throwable.class, this.c);
 
         verify(this.c, never()).accept(any());
 
