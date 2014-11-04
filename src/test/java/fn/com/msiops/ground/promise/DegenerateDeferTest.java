@@ -24,6 +24,7 @@ import org.junit.Test;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 import com.msiops.ground.promise.SupplierX;
 
 public class DegenerateDeferTest {
@@ -51,7 +52,7 @@ public class DegenerateDeferTest {
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
-        this.inner = new Async<>();
+        this.inner = Promises.async();
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);

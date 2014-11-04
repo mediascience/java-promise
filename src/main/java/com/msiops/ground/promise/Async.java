@@ -42,6 +42,10 @@ public final class Async<T> {
 
     private final Promise<T> p = new Promise<>();
 
+    Async() {
+
+    }
+
     /**
      * Break the managed {@link Promise}. Only one completion invocation, this
      * method or {@link #succeed(Object)}, is allowed per instance.

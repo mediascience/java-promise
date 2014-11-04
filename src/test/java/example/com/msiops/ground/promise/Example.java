@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public enum Example implements Runnable {
 
@@ -61,7 +62,7 @@ assert ecap.get() == x;
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-final Async<Integer> af = new Async<>();
+final Async<Integer> af = Promises.async();
 final Promise<Integer> toFulfill = af.promise();
 toFulfill.forEach(vcap::set);
 assert vcap.get() == 0;
@@ -69,7 +70,7 @@ af.succeed(75);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
-final Async<Integer> ab = new Async<>();
+final Async<Integer> ab = Promises.async();
 final Promise<Integer> toBreak = ab.promise();
 toBreak.on(RuntimeException.class, ecap::set);
 assert ecap.get() == null;
@@ -91,8 +92,8 @@ assert ecap.get() == x;
 
             // @formatter:off
 
-final Async<Object> toFulfill = new Async<>();
-final Async<Object> toBreak = new Async<>();
+final Async<Object> toFulfill = Promises.async();
+final Async<Object> toBreak = Promises.async();
 
 final Supplier<Promise<String>> finalizer = () -> Promise
         .of("Finally!");
@@ -143,7 +144,7 @@ assert cap2.get().equals("Finally!");
             // @formatter:off
 
 final AtomicReference<Object> vcap = new AtomicReference<>();
-final Async<Object> inner = new Async<>();
+final Async<Object> inner = Promises.async();
 Promise.of(75).then(i -> inner.promise())
         .forEach(vcap::set);
 assert vcap.get() == null;
@@ -244,7 +245,7 @@ Promise.of(75)
         return condition.get() ? Promise.of("Done!")
                 : Promise.broken(new RuntimeException());
     }, (x, u) -> {
-        pendingRetry.set(new Async<>());
+        pendingRetry.set(Promises.async());
         return pendingRetry.get().promise();
     }).forEach(vcap::set);
 

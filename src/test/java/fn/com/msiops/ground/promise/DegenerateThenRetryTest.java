@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class DegenerateThenRetryTest {
 
@@ -225,7 +226,7 @@ public class DegenerateThenRetryTest {
 
     private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
 
-        final Async<Boolean> a = new Async<>();
+        final Async<Boolean> a = Promises.async();
         this.retries.add(a);
         return a.promise();
 
@@ -233,7 +234,7 @@ public class DegenerateThenRetryTest {
 
     private Promise<Object> doWork(final Integer i) {
 
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         this.work.add(a);
         return a.promise();
 

@@ -20,19 +20,20 @@ import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class UsageTest {
 
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakBrokenFails() {
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         a.succeed(new RuntimeException());
         a.succeed(new RuntimeException());
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakFulfilledFails() {
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         a.succeed(25);
         a.succeed(new RuntimeException());
     }
@@ -40,13 +41,13 @@ public class UsageTest {
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
-        new Async<Object>().fail(null);
+        Promises.async().fail(null);
 
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAsyncFulfillBrokenFails() {
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         a.succeed(new RuntimeException());
         a.succeed(25);
     }
@@ -54,7 +55,7 @@ public class UsageTest {
     @Test(expected = IllegalStateException.class)
     public void testAsyncFulfillFulfilledFails() {
 
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         a.succeed(15);
         a.succeed(25);
 
@@ -63,7 +64,7 @@ public class UsageTest {
     @Test(expected = NullPointerException.class)
     public void testAsyncSucceedNullIllegal() {
 
-        new Async<Object>().succeed(null);
+        Promises.async().succeed(null);
 
     }
 

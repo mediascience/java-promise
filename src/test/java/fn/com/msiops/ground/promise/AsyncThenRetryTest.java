@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class AsyncThenRetryTest {
 
@@ -63,7 +64,7 @@ public class AsyncThenRetryTest {
 
         this.x = new Exception();
 
-        this.outer = new Async<>();
+        this.outer = Promises.async();
         this.r = this.outer.promise().then(this::doWork, this::doRetry);
 
         this.c = tc;
@@ -287,7 +288,7 @@ public class AsyncThenRetryTest {
 
     private Promise<Boolean> doRetry(final Throwable t, final Integer i) {
 
-        final Async<Boolean> a = new Async<>();
+        final Async<Boolean> a = Promises.async();
         this.retries.add(a);
         return a.promise();
 
@@ -295,7 +296,7 @@ public class AsyncThenRetryTest {
 
     private Promise<Object> doWork(final Integer i) {
 
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         this.work.add(a);
         return a.promise();
 

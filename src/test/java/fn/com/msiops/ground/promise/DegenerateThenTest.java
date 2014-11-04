@@ -26,6 +26,7 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class DegenerateThenTest {
 
@@ -52,7 +53,7 @@ public class DegenerateThenTest {
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
-        this.inner = new Async<>();
+        this.inner = Promises.async();
 
         this.value = 12;
         this.fulfilled = Promise.of(this.value);

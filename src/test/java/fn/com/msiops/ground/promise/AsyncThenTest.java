@@ -26,6 +26,7 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class AsyncThenTest {
 
@@ -54,8 +55,8 @@ public class AsyncThenTest {
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
-        this.inner = new Async<>();
-        this.outer = new Async<>();
+        this.inner = Promises.async();
+        this.outer = Promises.async();
 
         this.value = 12;
 

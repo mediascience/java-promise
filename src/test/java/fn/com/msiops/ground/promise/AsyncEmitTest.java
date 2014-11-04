@@ -25,6 +25,7 @@ import org.junit.Test;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class AsyncEmitTest {
 
@@ -47,7 +48,7 @@ public class AsyncEmitTest {
         this.x = new Exception();
 
         this.value = 12;
-        this.a = new Async<>();
+        this.a = Promises.async();
         this.p = this.a.promise();
 
         this.c = tc;

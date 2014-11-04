@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class ConcurrencyTest {
 
@@ -43,7 +44,7 @@ public class ConcurrencyTest {
         final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
 
         final String expected = "HI";
-        final Async<Integer> a = new Async<>();
+        final Async<Integer> a = Promises.async();
         final Promise<Integer> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
@@ -51,7 +52,7 @@ public class ConcurrencyTest {
         final Supplier<Promise<String>> src = new Supplier<Promise<String>>() {
             @Override
             public Promise<String> get() {
-                final Async<String> inner = new Async<>();
+                final Async<String> inner = Promises.async();
                 exec.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -156,7 +157,7 @@ public class ConcurrencyTest {
         final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
 
         final Exception expected = new Exception();
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         final Promise<Object> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
@@ -236,7 +237,7 @@ public class ConcurrencyTest {
         final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
 
         final String expected = "HI";
-        final Async<Integer> a = new Async<>();
+        final Async<Integer> a = Promises.async();
         final Promise<Integer> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
@@ -244,7 +245,7 @@ public class ConcurrencyTest {
         final Function<Object, Promise<String>> mf = new Function<Object, Promise<String>>() {
             @Override
             public Promise<String> apply(final Object t) {
-                final Async<String> inner = new Async<>();
+                final Async<String> inner = Promises.async();
                 exec.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -350,7 +351,7 @@ public class ConcurrencyTest {
 
         final String rval = "HI";
         final Optional<String> expected = Optional.of(rval);
-        final Async<Integer> a = new Async<>();
+        final Async<Integer> a = Promises.async();
         final Promise<Integer> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
@@ -358,7 +359,7 @@ public class ConcurrencyTest {
         final Function<Throwable, Promise<String>> h = new Function<Throwable, Promise<String>>() {
             @Override
             public Promise<String> apply(final Throwable x) {
-                final Async<String> inner = new Async<>();
+                final Async<String> inner = Promises.async();
                 exec.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -465,7 +466,7 @@ public class ConcurrencyTest {
         final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
 
         final Object expected = new Object();
-        final Async<Object> a = new Async<>();
+        final Async<Object> a = Promises.async();
         final Promise<Object> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
@@ -545,7 +546,7 @@ public class ConcurrencyTest {
         final CountDownLatch end = new CountDownLatch(breadsz * 2 + 1);
 
         final Object expected = 24;
-        final Async<Integer> a = new Async<>();
+        final Async<Integer> a = Promises.async();
         final Promise<Integer> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
