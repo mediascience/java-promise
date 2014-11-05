@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.msiops.ground.either.Either;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
@@ -48,6 +49,15 @@ final Promise<Integer> broken = Promises.broken(x);
 broken.on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 
+final AtomicInteger vcap2 = new AtomicInteger();
+final Promise<Integer> fulfilled2 = Promises.of(Either.left(75));
+fulfilled2.forEach(vcap2::set);
+assert vcap2.get() == 75;
+
+final AtomicReference<Exception> ecap2 = new AtomicReference<>();
+final Promise<Integer> broken2 = Promises.of(Either.right(x));
+broken2.on(RuntimeException.class, ecap2::set);
+assert ecap2.get() == x;
 
         // @formatter:on
         }
@@ -78,6 +88,22 @@ assert ecap.get() == null;
 final Exception x = new RuntimeException();
 ab.fail(x);
 assert ecap.get() == x;
+
+final AtomicInteger vcap2 = new AtomicInteger();
+final Async<Integer> af2 = Promises.async();
+final Promise<Integer> toFulfill2 = af2.promise();
+toFulfill2.forEach(vcap2::set);
+assert vcap2.get() == 0;
+af2.complete(Either.left(75));
+assert vcap2.get() == 75;
+
+final AtomicReference<Exception> ecap2 = new AtomicReference<>();
+final Async<Integer> ab2 = Promises.async();
+final Promise<Integer> toBreak2 = ab2.promise();
+toBreak2.on(RuntimeException.class, ecap2::set);
+assert ecap2.get() == null;
+ab2.complete(Either.right(x));
+assert ecap2.get() == x;
 
             // @formatter:on
 
