@@ -223,6 +223,37 @@ assert vcap.get() == 75;
 assert scap.get().equals(Optional.empty());
 ```
 
+### Lift
+
+```Promises.lift(..)``` converts a funcion that transforms a value into
+a function that transforms a promise.
+
+```java
+final Function<Promise<Integer>, Promise<Integer>> lifted = Promises
+        .lift(i -> 2 * i);
+
+final AtomicInteger cap1 = new AtomicInteger();
+final AtomicInteger cap2 = new AtomicInteger();
+final AtomicReference<Object> cap3 = new AtomicReference<>();
+
+final Promise<Integer> p1 = Promises.fulfilled(75);
+lifted.apply(p1).forEach(cap1::set);
+assert cap1.get() == 150;
+
+final Async<Integer> a2 = Promises.async();
+lifted.apply(a2.promise()).forEach(cap2::set);
+assert cap2.get() == 0;
+a2.succeed(75);
+assert cap2.get() == 150;
+
+final Async<Integer> a3 = Promises.async();
+lifted.apply(a3.promise()).on(Throwable.class, cap3::set);
+assert cap3.get() == null;
+final Exception x = new RuntimeException();
+a3.fail(x);
+assert cap3.get() == x;
+```
+
 ## Versioning
 
 Releases in the 0.x series are the Wild West. Anything can change between

@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.msiops.ground.promise.Async;
@@ -127,6 +128,41 @@ toBreak.promise().defer(() -> finalizer.get())
 assert cap2.get() == null;
 toBreak.fail(new Exception()); // prints Finally!
 assert cap2.get().equals("Finally!");
+
+            // @formatter:on
+
+        }
+    },
+
+    LIFT {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final Function<Promise<Integer>, Promise<Integer>> lifted = Promises
+        .lift(i -> 2 * i);
+
+final AtomicInteger cap1 = new AtomicInteger();
+final AtomicInteger cap2 = new AtomicInteger();
+final AtomicReference<Object> cap3 = new AtomicReference<>();
+
+final Promise<Integer> p1 = Promises.fulfilled(75);
+lifted.apply(p1).forEach(cap1::set);
+assert cap1.get() == 150;
+
+final Async<Integer> a2 = Promises.async();
+lifted.apply(a2.promise()).forEach(cap2::set);
+assert cap2.get() == 0;
+a2.succeed(75);
+assert cap2.get() == 150;
+
+final Async<Integer> a3 = Promises.async();
+lifted.apply(a3.promise()).on(Throwable.class, cap3::set);
+assert cap3.get() == null;
+final Exception x = new RuntimeException();
+a3.fail(x);
+assert cap3.get() == x;
 
             // @formatter:on
 
