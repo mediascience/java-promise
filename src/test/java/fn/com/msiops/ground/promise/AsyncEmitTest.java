@@ -56,6 +56,58 @@ public class AsyncEmitTest {
     }
 
     @Test
+    public void testBrokenEmit() throws Throwable {
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.fail(this.x);
+
+        verify(this.c).accept(this.x);
+
+    }
+
+    @Test
+    public void testBrokenEmitMultiple() throws Throwable {
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.fail(this.x);
+
+        verify(this.c, times(2)).accept(this.x);
+
+    }
+
+    @Test
     public void testBrokenHandleError() throws Throwable {
 
         this.p.on(Throwable.class, this.c);
@@ -132,6 +184,58 @@ public class AsyncEmitTest {
     }
 
     @Test
+    public void testFulfilledEmit() throws Throwable {
+
+        this.p.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.succeed(this.value);
+
+        verify(this.c).accept(this.value);
+
+    }
+
+    @Test
+    public void testFulfilledEmitMultiple() throws Throwable {
+
+        this.p.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.p.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.succeed(this.value);
+
+        verify(this.c, times(2)).accept(this.value);
+
+    }
+
+    @Test
     public void testFulfilledHandleMultiple() throws Throwable {
 
         this.p.forEach(this.c);
@@ -172,6 +276,13 @@ public class AsyncEmitTest {
 
         this.a.succeed(this.value);
         this.p.forEach(null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testIncompleteEmitNullconsumerIllegal() {
+
+        this.p.emit(null);
 
     }
 

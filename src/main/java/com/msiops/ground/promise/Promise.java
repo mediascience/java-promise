@@ -23,6 +23,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.msiops.ground.either.Either;
+
 /**
  * <p>
  * A promise is a future computation whose (evantual) value cannot be directly
@@ -117,6 +119,36 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+
+    }
+
+    public void emit(final ConsumerX<Either<? super T, ? super Throwable>> h) {
+
+        Objects.requireNonNull(h);
+
+        final Link<T> link = new Link<T>() {
+
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                final Either<T, Throwable> result;
+                if (x == null) {
+                    result = Either.left(value);
+                } else {
+                    result = Either.right(x);
+                }
+                try {
+                    h.accept(result);
+                } catch (final Throwable e) {
+                    /*
+                     * silently ignore error in destination.
+                     */
+                }
+
+            }
+        };
+
+        dispatch(link);
 
     }
 
