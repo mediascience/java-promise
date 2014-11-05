@@ -47,13 +47,13 @@ A promise can be created already fulfilled or broken.
 
 ```java
 final AtomicInteger vcap = new AtomicInteger();
-final Promise<Integer> fulfilled = Promise.of(75);
+final Promise<Integer> fulfilled = Promises.fulfilled(75);
 fulfilled.forEach(vcap::set);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-final Promise<Integer> broken = Promise.broken(x);
+final Promise<Integer> broken = Promises.broken(x);
 broken.on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 ```
@@ -66,7 +66,7 @@ can be chained to any number of continuations.
 
 ```java
 final AtomicInteger vcap = new AtomicInteger();
-final Async<Integer> af = new Async<>();
+final Async<Integer> af = Promises.async();
 final Promise<Integer> toFulfill = af.promise();
 toFulfill.forEach(vcap::set);
 assert vcap.get() == 0;
@@ -74,12 +74,12 @@ af.succeed(75);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
-final Async<Integer> ab = new Async<>();
+final Async<Integer> ab = Promises.async();
 final Promise<Integer> toBreak = ab.promise();
 toBreak.on(RuntimeException.class, ecap::set);
 assert ecap.get() == null;
-Exception x = new RuntimeException();
-ab.fail(x); 
+final Exception x = new RuntimeException();
+ab.fail(x);
 assert ecap.get() == x;
 ```
 
@@ -90,18 +90,18 @@ the promise is broken, the transformation is not performed.
 
 ```java
 final AtomicInteger vcap = new AtomicInteger();
-Promise.of(75).map(i -> i * 2).forEach(vcap::set);
+Promises.fulfilled(75).map(i -> i * 2).forEach(vcap::set);
 assert vcap.get() == 150;
 
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
+Promises.<Integer>broken(x)
     .map(i -> i * 2) // lambda expr not invoked
     .on(Throwable.class, ecap::set);
 assert ecap.get() == x;
 ```
 
-### Flat Map
+### Then
 
 The ```flatMap(..)``` method binds a promise function downstream. The promise
 function is run only if the original promise is fulfilled. The promise function
@@ -109,9 +109,9 @@ runs independently and supplies completion to the promise returned by
 the ```flatMap(..)``` method.
 
 ```java
-final AtomicReference<Object> vcap = new AtomicReference<>(); 
-final Async<Object> inner = new Async<>();
-Promise.of(75).flatMap(i -> inner.promise())
+final AtomicReference<Object> vcap = new AtomicReference<>();
+final Async<Object> inner = Promises.async();
+Promises.fulfilled(75).then(i -> inner.promise())
         .forEach(vcap::set);
 assert vcap.get() == null;
 inner.succeed("Hello");
@@ -120,13 +120,13 @@ assert vcap.get().equals("Hello");
 
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
-    .flatMap(i -> Promise.of("Hello")) // lambda expr not invoked
-    .on(RuntimeException.class, ecap::set); 
+Promises.<Integer>broken(x)
+    .then(i -> Promises.fulfilled("Hello")) // lambda expr not invoked
+    .on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 ```
 
-### Retry
+### Then with Retry
 
 The ```then(..)``` method binds in the same way as ```flatMap(..)``` but also
 accepts a retry policy expressed as a promise function. If the promise
@@ -141,12 +141,12 @@ final AtomicBoolean condition = new AtomicBoolean();
 final AtomicReference<Async<Boolean>> pendingRetry = new AtomicReference<Async<Boolean>>();
 final AtomicReference<Object> vcap = new AtomicReference<>();
 
-Promise.of(75)
+Promises.fulfilled(75)
     .then(i -> {
-        return condition.get() ? Promise.of("Done!")
-                : Promise.broken(new RuntimeException());
+        return condition.get() ? Promises.fulfilled("Done!")
+                : Promises.broken(new RuntimeException());
     }, (x, u) -> {
-        pendingRetry.set(new Async<>());
+        pendingRetry.set(Promises.async());
         return pendingRetry.get().promise();
     }).forEach(vcap::set);
 
@@ -167,11 +167,11 @@ or broken. It is analogous to the ```finally``` handler in a Java
 try/catch/finally block.
 
 ```java
-final Async<Object> toFulfill = new Async<>();
-final Async<Object> toBreak = new Async<>();
+final Async<Object> toFulfill = Promises.async();
+final Async<Object> toBreak = Promises.async();
 
-final Supplier<Promise<String>> finalizer = () -> Promise
-        .of("Finally!");
+final Supplier<Promise<String>> finalizer = () -> Promises
+        .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
 toFulfill.promise().defer(finalizer).forEach(cap1::set);
@@ -182,7 +182,7 @@ assert cap1.get().equals("Finally!");
 final AtomicReference<String> cap2 = new AtomicReference<String>();
 toBreak.promise().defer(finalizer).forEach(cap2::set);
 assert cap2.get() == null;
-toBreak.fail(new Exception());
+toBreak.fail(new Exception()); // prints Finally!
 assert cap2.get().equals("Finally!");
 ```
 
@@ -202,9 +202,9 @@ final AtomicReference<Object> ecap = new AtomicReference<>();
 final AtomicReference<Object> rcap = new AtomicReference<>();
 
 final Exception x = new RuntimeException();
-final Promise<?> p = Promise.broken(x);
+final Promise<?> p = Promises.broken(x);
 p.on(Throwable.class, ecap::set);
-p.recover(Exception.class, err -> Promise.of("Recovered!"))
+p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(rcap::set);
 
 assert ecap.get() == x;
@@ -214,9 +214,9 @@ assert rcap.get().equals(Optional.of("Recovered!"));
 final AtomicInteger vcap = new AtomicInteger();
 final AtomicReference<Object> scap = new AtomicReference<Object>();
 
-final Promise<Integer> q = Promise.of(75);
+final Promise<Integer> q = Promises.fulfilled(75);
 q.forEach(vcap::set);
-q.recover(Exception.class, err -> Promise.of("Recovered!"))
+q.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(scap::set);
 
 assert vcap.get() == 75;

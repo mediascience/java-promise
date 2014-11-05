@@ -134,37 +134,6 @@ assert cap2.get().equals("Finally!");
     },
 
     /**
-     * Show how to bind to downstream promise function.
-     */
-    FLATMAP {
-
-        @Override
-        public void run() {
-
-            // @formatter:off
-
-final AtomicReference<Object> vcap = new AtomicReference<>();
-final Async<Object> inner = Promises.async();
-Promises.fulfilled(75).then(i -> inner.promise())
-        .forEach(vcap::set);
-assert vcap.get() == null;
-inner.succeed("Hello");
-assert vcap.get().equals("Hello");
-
-
-final AtomicReference<Object> ecap = new AtomicReference<>();
-final Exception x = new RuntimeException();
-Promises.<Integer>broken(x)
-    .then(i -> Promises.fulfilled("Hello")) // lambda expr not invoked
-    .on(RuntimeException.class, ecap::set);
-assert ecap.get() == x;
-
-            // @formatter:on
-
-        };
-    },
-
-    /**
      * Show how to transform value.
      */
     MAP {
@@ -228,9 +197,40 @@ assert scap.get().equals(Optional.empty());
     },
 
     /**
+     * Show how to bind to downstream promise function.
+     */
+    THEN {
+
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final AtomicReference<Object> vcap = new AtomicReference<>();
+final Async<Object> inner = Promises.async();
+Promises.fulfilled(75).then(i -> inner.promise())
+        .forEach(vcap::set);
+assert vcap.get() == null;
+inner.succeed("Hello");
+assert vcap.get().equals("Hello");
+
+
+final AtomicReference<Object> ecap = new AtomicReference<>();
+final Exception x = new RuntimeException();
+Promises.<Integer>broken(x)
+    .then(i -> Promises.fulfilled("Hello")) // lambda expr not invoked
+    .on(RuntimeException.class, ecap::set);
+assert ecap.get() == x;
+
+            // @formatter:on
+
+        };
+    },
+
+    /**
      * Show how to retry on failure.
      */
-    RETRY {
+    THEN_RETRY {
         @Override
         public void run() {
 
