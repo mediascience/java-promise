@@ -107,8 +107,8 @@ public interface Promises {
         };
 
         p.emit(r -> {
-            r.forEach(v -> result.set(Either.left((R) v)));
-            r.swap().forEach(x -> result.set(Either.right((Throwable) x)));
+            r.forEach(v -> result.set(Either.left(v)));
+            r.swap().forEach(x -> result.set(Either.right(x)));
             dec.accept(r);
         });
 

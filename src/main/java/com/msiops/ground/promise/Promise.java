@@ -122,7 +122,7 @@ public final class Promise<T> {
 
     }
 
-    public void emit(final ConsumerX<Either<? super T, ? super Throwable>> h) {
+    public void emit(final ConsumerX<? super Either<T, Throwable>> h) {
 
         Objects.requireNonNull(h);
 
