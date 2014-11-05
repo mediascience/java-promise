@@ -43,7 +43,8 @@ See [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%20%22com.msi
 
 ### Create Degenerate
 
-A promise can be created already fulfilled or broken.
+A promise can be created already fulfilled or broken. Note the
+use of Either to create the final two promises.
 
 ```java
 final AtomicInteger vcap = new AtomicInteger();
@@ -72,7 +73,8 @@ assert ecap2.get() == x;
 
 The more interesting case is to create a promise that is
 not complete. An incomplete promise is a future that
-can be chained to any number of continuations.
+can be chained to any number of continuations. Note the
+use of Either to complete the final two promises.
 
 ```java
 final AtomicInteger vcap = new AtomicInteger();
@@ -129,10 +131,10 @@ assert ecap.get() == x;
 
 ### Then
 
-The ```flatMap(..)``` method binds a promise function downstream. The promise
+The ```then(..)``` method binds a promise function downstream. The promise
 function is run only if the original promise is fulfilled. The promise function
 runs independently and supplies completion to the promise returned by
-the ```flatMap(..)``` method.
+the ```then(..)``` method.
 
 ```java
 final AtomicReference<Object> vcap = new AtomicReference<>();
@@ -154,13 +156,13 @@ assert ecap.get() == x;
 
 ### Then with Retry
 
-The ```then(..)``` method binds in the same way as ```flatMap(..)``` but also
-accepts a retry policy expressed as a promise function. If the promise
-supplied by the work function fails, then the retry function is invoke. When
-it is fulfilled with ```true``` the work function is run again and its result
-replaces the previous iteration's promise in the provider role. The cycle continues
-until a) the work function succeeds, or b) the retry promise breaks or is fulfilled
-with ```false```.
+The ```then(..)``` method binds in the same way as ```then(..)``` with a
+single argument but it also accepts a retry policy expressed as a promise
+function. If the promise supplied by the work function fails, then the retry
+function is invoke. When it is fulfilled with ```true``` the work function
+is run again and its result replaces the previous iteration's promise in
+the provider role. The cycle continues until a) the work function succeeds,
+or b) the retry promise breaks or is fulfilled with ```false```.
 
 ```java
 final AtomicBoolean condition = new AtomicBoolean();
