@@ -16,7 +16,12 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
+
+import com.msiops.ground.either.Either;
 
 public interface Promises {
 
@@ -83,6 +88,35 @@ public interface Promises {
             final FunctionX<T, R> f) {
 
         return pv -> pv.map(f);
+
+    }
+
+    public static <R> Promise<R> waitFor(final Promise<R> p,
+            final Promise<?>... others) {
+
+        final AtomicInteger remaining = new AtomicInteger(1 + others.length);
+        final AtomicReference<Either<R, Throwable>> result = new AtomicReference<>();
+
+        final Async<R> control = Promises.async();
+        final Consumer<Object> dec = v -> {
+            final int rm = remaining.decrementAndGet();
+            if (rm == 0) {
+                result.get().forEach(control::succeed);
+                result.get().swap().forEach(control::fail);
+            }
+        };
+
+        p.emit(r -> {
+            r.forEach(v -> result.set(Either.left((R) v)));
+            r.swap().forEach(x -> result.set(Either.right((Throwable) x)));
+            dec.accept(r);
+        });
+
+        for (final Promise<?> o : others) {
+            o.emit(dec::accept);
+        }
+
+        return control.promise();
 
     }
 

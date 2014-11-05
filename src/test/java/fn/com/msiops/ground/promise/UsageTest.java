@@ -152,4 +152,34 @@ public class UsageTest {
         assertEquals("24", actual.get());
 
     }
+
+    @Test
+    public void testWaitForDegenerateBroken() {
+
+        final Exception x = new RuntimeException();
+        final Promise<Integer> p1 = Promises.broken(x);
+        final Promise<Integer> p2 = Promises.broken(new Exception());
+        final Promise<String> p3 = Promises.fulfilled("3");
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        Promises.waitFor(p1, p2, p3).on(Throwable.class, actual::set);
+
+        assertEquals(x, actual.get());
+
+    }
+
+    @Test
+    public void testWaitForDegenerateFulfilled() {
+
+        final Promise<Integer> p1 = Promises.fulfilled(1);
+        final Promise<Integer> p2 = Promises.broken(new RuntimeException());
+        final Promise<String> p3 = Promises.fulfilled("3");
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        Promises.waitFor(p1, p2, p3).forEach(actual::set);
+
+        assertEquals(1, actual.get());
+
+    }
+
 }
