@@ -91,6 +91,15 @@ public interface Promises {
 
     }
 
+    public static <R> Promise<R> of(
+            final Either<? extends R, ? extends Throwable> e) {
+
+        final Promise<R> rval = new Promise<>();
+        rval.complete(e);
+        return rval;
+
+    }
+
     public static <R> Promise<R> waitFor(final Promise<R> p,
             final Promise<?>... others) {
 
@@ -101,8 +110,7 @@ public interface Promises {
         final Consumer<Object> dec = v -> {
             final int rm = remaining.decrementAndGet();
             if (rm == 0) {
-                result.get().forEach(control::succeed);
-                result.get().swap().forEach(control::fail);
+                control.complete(result.get());
             }
         };
 

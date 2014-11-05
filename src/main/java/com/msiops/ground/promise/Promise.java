@@ -537,6 +537,18 @@ public final class Promise<T> {
         return rval;
     }
 
+    void complete(final Either<? extends T, ? extends Throwable> e) {
+
+        e.forEach(v -> {
+            complete(v, null);
+        });
+
+        e.swap().forEach(x -> {
+            complete(null, x);
+        });
+
+    }
+
     void fail(final Throwable x) {
 
         complete(null, Objects.requireNonNull(x));

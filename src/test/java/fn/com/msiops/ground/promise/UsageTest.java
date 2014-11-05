@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import org.junit.Test;
 
+import com.msiops.ground.either.Either;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
@@ -43,10 +44,32 @@ public class UsageTest {
         a.succeed(new RuntimeException());
     }
 
+    @Test
+    public void testAsyncBrokenFromEither() {
+
+        final Async<Integer> a = Promises.async();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        a.promise().on(Throwable.class, actual::set);
+
+        assertNull(actual.get());
+
+        final Exception x = new RuntimeException();
+        a.complete(Either.right(x));
+
+        assertEquals(x, actual.get());
+    }
+
     @Test(expected = NullPointerException.class)
     public void testAsyncFailNullIllegal() {
 
         Promises.async().fail(null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testAsyncFromNullEitherIllegal() {
+
+        Promises.async().complete(null);
 
     }
 
@@ -55,6 +78,20 @@ public class UsageTest {
         final Async<Object> a = Promises.async();
         a.succeed(new RuntimeException());
         a.succeed(25);
+    }
+
+    @Test
+    public void testAsyncFulfilledFromEither() {
+
+        final Async<Integer> a = Promises.async();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        a.promise().forEach(actual::set);
+
+        assertNull(actual.get());
+
+        a.complete(Either.left(12));
+
+        assertEquals(12, actual.get());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -73,11 +110,38 @@ public class UsageTest {
 
     }
 
+    @Test
+    public void testDegenerateBrokenFromEither() {
+
+        final Exception x = new RuntimeException();
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        Promises.of(Either.right(x)).on(Throwable.class, actual::set);
+
+        assertEquals(x, actual.get());
+    }
+
     @Test(expected = NullPointerException.class)
     public void testDegenerateBrokenNullInvalid() {
 
         Promises.broken(null);
 
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDegenerateFromNullEitherIllegal() {
+
+        Promises.of(null);
+
+    }
+
+    @Test
+    public void testDegenerateFulfilledFromEither() {
+
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        Promises.of(Either.left(12)).forEach(actual::set);
+
+        assertEquals(12, actual.get());
     }
 
     @Test(expected = NullPointerException.class)

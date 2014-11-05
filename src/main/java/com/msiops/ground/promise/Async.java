@@ -18,6 +18,8 @@ package com.msiops.ground.promise;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.msiops.ground.either.Either;
+
 /**
  * <p>
  * Complete a promise later. An async instance produces a single {@link Promise}
@@ -43,6 +45,13 @@ public final class Async<T> {
     private final Promise<T> p = new Promise<>();
 
     Async() {
+
+    }
+
+    public void complete(final Either<? extends T, ? extends Throwable> e) {
+
+        race();
+        this.p.complete(e);
 
     }
 
