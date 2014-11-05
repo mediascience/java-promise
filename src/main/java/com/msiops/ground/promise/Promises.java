@@ -16,6 +16,8 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.function.Function;
+
 public interface Promises {
 
     public static <T> Async<T> async() {
@@ -65,6 +67,22 @@ public interface Promises {
         final Promise<R> rval = new Promise<>();
         rval.succeed(v);
         return rval;
+
+    }
+
+    /**
+     * Convert a value function into a function that performs the computation
+     * inside {@link Promise promises}.
+     *
+     * @param f
+     *            function to lift.
+     *
+     * @return lifted function
+     */
+    public static <T, R> Function<Promise<T>, Promise<R>> lift(
+            final FunctionX<T, R> f) {
+
+        return pv -> pv.map(f);
 
     }
 

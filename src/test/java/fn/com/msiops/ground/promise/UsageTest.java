@@ -16,9 +16,15 @@
  */
 package fn.com.msiops.ground.promise;
 
+import static org.junit.Assert.*;
+
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
+import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class UsageTest {
@@ -81,4 +87,69 @@ public class UsageTest {
 
     }
 
+    @Test
+    public void testLiftedOnAsyncBroken() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .lift(i -> String.valueOf(i * 2));
+
+        final Async<Integer> a = Promises.async();
+
+        final Exception x = new RuntimeException();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        lifted.apply(a.promise()).on(Throwable.class, actual::set);
+
+        assertNull(actual.get());
+
+        a.fail(x);
+
+        assertEquals(x, actual.get());
+
+    }
+
+    @Test
+    public void testLiftedOnAsyncFulfilled() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .lift(i -> String.valueOf(i * 2));
+
+        final Async<Integer> a = Promises.async();
+
+        final AtomicReference<String> actual = new AtomicReference<>();
+        lifted.apply(a.promise()).forEach(actual::set);
+
+        assertNull(actual.get());
+
+        a.succeed(12);
+
+        assertEquals("24", actual.get());
+
+    }
+
+    @Test
+    public void testLiftedOnDegenerateBroken() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .lift(i -> String.valueOf(i * 2));
+
+        final Exception x = new RuntimeException();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        lifted.apply(Promises.broken(x)).on(Throwable.class, actual::set);
+
+        assertEquals(x, actual.get());
+
+    }
+
+    @Test
+    public void testLiftedOnDegenerateFulfilled() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .lift(i -> String.valueOf(i * 2));
+
+        final AtomicReference<String> actual = new AtomicReference<>();
+        lifted.apply(Promises.fulfilled(12)).forEach(actual::set);
+
+        assertEquals("24", actual.get());
+
+    }
 }
