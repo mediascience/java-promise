@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -538,9 +539,16 @@ public final class Promise<T> {
     }
 
     /**
-     * Convert to a blocking future.
+     * <p>
+     * Convert to a blocking future. The state of the returned value follows the
+     * completion status of this instance. If this promise is broken, the
+     * returned future's {@link Future#get()} will throw the corresponding
+     * exception (encapsulated in {@link ExecutionException}). If this promise
+     * is fulfilled, the returned future's {@link Future#get()} will return the
+     * value.
+     * </p>
      *
-     * @return
+     * @return blocking future.
      */
     public Future<T> toBlocking() {
 

@@ -115,6 +115,12 @@ public interface Promises {
      * Convert a value function into a function that performs the computation
      * inside {@link Promise promises}.
      *
+     * @param <T>
+     *            value function argument type.
+     *
+     * @param <R>
+     *            value function return type.
+     *
      * @param f
      *            function to lift.
      *
@@ -130,6 +136,13 @@ public interface Promises {
     /**
      * Convert a promise function into a function that performs the computation
      * inside {@link Promise promises}.
+     *
+     * @param <T>
+     *            value function argument type.
+     *
+     * @param <R>
+     *            value function return promise type.
+     *
      *
      * @param f
      *            function to lift.
