@@ -16,6 +16,8 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.msiops.ground.either.Either;
@@ -104,10 +106,33 @@ public final class Async<T> {
         this.p.succeed(value);
     }
 
+    public Runnable when(final Future<? extends T> fv) {
+
+        race();
+        return new Runnable() {
+
+            @Override
+            public void run() {
+
+                try {
+                    Async.this.p.succeed(fv.get());
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    Async.this.p.fail(e);
+                } catch (final ExecutionException e) {
+                    Async.this.p.fail(e.getCause());
+                }
+
+            }
+        };
+
+    }
+
     private void race() {
         final boolean win = this.completed.compareAndSet(false, true);
         if (!win) {
-            throw new IllegalStateException("promise is completed already");
+            throw new IllegalStateException(
+                    "promise is completed or bound already");
         }
     }
 
