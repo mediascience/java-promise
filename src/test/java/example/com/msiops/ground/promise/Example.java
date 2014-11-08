@@ -25,12 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import com.msiops.ground.either.Either;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
+import com.msiops.ground.promise.SupplierX;
 
 public enum Example implements Runnable {
 
@@ -167,35 +167,17 @@ assert ecap2.get() == x;
 final Async<Object> toFulfill = Promises.async();
 final Async<Object> toBreak = Promises.async();
 
-final Supplier<Promise<String>> finalizer = () -> Promises
+final SupplierX<Promise<String>> finalizer = () -> Promises
         .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
-/*
- * this is correct but will not compile in eclipse. Use it for
- * documentation
- */
-//toFulfill.promise().defer(finalizer).forEach(cap1::set);
-/*
- * this is verbose but compiles in eclipse. Do not use for documentation.
- */
-toFulfill.promise().defer(() -> finalizer.get())
-        .forEach(cap1::set);
+toFulfill.promise().defer(finalizer).forEach(cap1::set);
 assert cap1.get() == null;
 toFulfill.succeed(109);
 assert cap1.get().equals("Finally!");
 
 final AtomicReference<String> cap2 = new AtomicReference<String>();
-/*
- * this is correct but will not compile in eclipse. Use it for
- * documentation
- */
-//toBreak.promise().defer(finalizer).forEach(cap2::set);
-/*
- * this is verbose but compiles in eclipse. Do not use for documentation.
- */
-toBreak.promise().defer(() -> finalizer.get())
-        .forEach(cap2::set);
+toBreak.promise().defer(finalizer).forEach(cap2::set);
 assert cap2.get() == null;
 toBreak.fail(new Exception()); // prints Finally!
 assert cap2.get().equals("Finally!");

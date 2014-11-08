@@ -93,7 +93,7 @@ public final class Promise<T> {
      *
      * @return promise to compute a new value when this promise complete.
      */
-    public <R> Promise<R> defer(final SupplierX<Promise<? extends R>> src) {
+    public <R> Promise<R> defer(final SupplierX<Promise<R>> src) {
 
         Objects.requireNonNull(src);
 

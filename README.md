@@ -198,7 +198,7 @@ try/catch/finally block.
 final Async<Object> toFulfill = Promises.async();
 final Async<Object> toBreak = Promises.async();
 
-final Supplier<Promise<String>> finalizer = () -> Promises
+final SupplierX<Promise<String>> finalizer = () -> Promises
         .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
