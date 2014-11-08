@@ -218,6 +218,72 @@ public class UsageTest {
     }
 
     @Test
+    public void testLiftPedOnAsyncBroken() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .liftP(i -> Promises.fulfilled(String.valueOf(i * 2)));
+
+        final Async<Integer> a = Promises.async();
+
+        final Exception x = new RuntimeException();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        lifted.apply(a.promise()).on(Throwable.class, actual::set);
+
+        assertNull(actual.get());
+
+        a.fail(x);
+
+        assertEquals(x, actual.get());
+
+    }
+
+    @Test
+    public void testLiftPedOnAsyncFulfilled() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .liftP(i -> Promises.fulfilled(String.valueOf(i * 2)));
+
+        final Async<Integer> a = Promises.async();
+
+        final AtomicReference<String> actual = new AtomicReference<>();
+        lifted.apply(a.promise()).forEach(actual::set);
+
+        assertNull(actual.get());
+
+        a.succeed(12);
+
+        assertEquals("24", actual.get());
+
+    }
+
+    @Test
+    public void testLiftPedOnDegenerateBroken() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .liftP(i -> Promises.fulfilled(String.valueOf(i * 2)));
+
+        final Exception x = new RuntimeException();
+        final AtomicReference<Object> actual = new AtomicReference<>();
+        lifted.apply(Promises.broken(x)).on(Throwable.class, actual::set);
+
+        assertEquals(x, actual.get());
+
+    }
+
+    @Test
+    public void testLiftPedOnDegenerateFulfilled() {
+
+        final Function<Promise<Integer>, Promise<String>> lifted = Promises
+                .liftP(i -> Promises.fulfilled(String.valueOf(i * 2)));
+
+        final AtomicReference<String> actual = new AtomicReference<>();
+        lifted.apply(Promises.fulfilled(12)).forEach(actual::set);
+
+        assertEquals("24", actual.get());
+
+    }
+
+    @Test
     public void testWaitForDegenerateBroken() {
 
         final Exception x = new RuntimeException();

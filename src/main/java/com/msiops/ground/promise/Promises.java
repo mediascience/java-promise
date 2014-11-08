@@ -91,6 +91,22 @@ public interface Promises {
 
     }
 
+    /**
+     * Convert a promise function into a function that performs the computation
+     * inside {@link Promise promises}.
+     *
+     * @param f
+     *            function to lift.
+     *
+     * @return lifted function
+     */
+    public static <T, R> Function<Promise<T>, Promise<R>> liftP(
+            final FunctionX<T, Promise<R>> f) {
+
+        return pv -> pv.then(f);
+
+    }
+
     public static <R> Promise<R> of(
             final Either<? extends R, ? extends Throwable> e) {
 
