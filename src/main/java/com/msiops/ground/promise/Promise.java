@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -535,6 +536,19 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+    }
+
+    /**
+     * Convert to a blocking future.
+     *
+     * @return
+     */
+    public Future<T> toBlocking() {
+
+        final FutureAdapter<T> rval = new FutureAdapter<>();
+        dispatch(rval);
+        return rval;
+
     }
 
     void complete(final Either<? extends T, ? extends Throwable> e) {
