@@ -340,8 +340,7 @@ public final class Promise<T> {
      * @return new promise to recover from failure.
      */
     public <R, X extends Throwable> Promise<Optional<R>> recover(
-            final Class<X> sel,
-            final FunctionX<? super X, Promise<? extends R>> h) {
+            final Class<X> sel, final FunctionX<? super X, Promise<R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
