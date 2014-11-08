@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class DegenerateMapTest {
 
@@ -51,13 +52,13 @@ public class DegenerateMapTest {
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
         this.value = 12;
-        this.fulfilled = Promise.of(this.value);
+        this.fulfilled = Promises.fulfilled(this.value);
 
         this.rvalue = "Hello";
         when(tf.apply(this.value)).thenReturn(this.rvalue);
 
         this.x = new Exception();
-        this.broken = Promise.broken(this.x);
+        this.broken = Promises.broken(this.x);
 
         this.f = tf;
         this.c = tc;

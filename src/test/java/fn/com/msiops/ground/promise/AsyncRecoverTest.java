@@ -28,6 +28,7 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class AsyncRecoverTest {
 
@@ -55,8 +56,8 @@ public class AsyncRecoverTest {
         @SuppressWarnings("unchecked")
         final ConsumerX<Object> tc = mock(ConsumerX.class);
 
-        this.outer = new Async<>();
-        this.inner = new Async<>();
+        this.outer = Promises.async();
+        this.inner = Promises.async();
 
         this.value = 12;
 

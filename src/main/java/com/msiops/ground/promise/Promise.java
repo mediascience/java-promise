@@ -20,8 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.msiops.ground.either.Either;
 
 /**
  * <p>
@@ -55,52 +58,6 @@ import java.util.concurrent.atomic.AtomicReference;
  *            promised value type.
  */
 public final class Promise<T> {
-
-    /**
-     * Create a broken promise. The returned promise is complete.
-     *
-     * @param <R>
-     *            value type.
-     *
-     * @param x
-     *            error, must not be null.
-     *
-     * @return created promise
-     *
-     * @throws NullPointerException
-     *             if error is null.
-     *
-     */
-    public static <R> Promise<R> broken(final Throwable x) {
-
-        final Promise<R> rval = new Promise<>();
-        rval.fail(x);
-        return rval;
-
-    }
-
-    /**
-     * Create a fulfilled promise. The returned promise is complete.
-     *
-     * @param <R>
-     *            value type.
-     *
-     * @param v
-     *            fulfillment value. Must not be null.
-     *
-     * @return created promise.
-     *
-     * @throws NullPointerException
-     *             if argument is null.
-     *
-     */
-    public static <R> Promise<R> of(final R v) {
-
-        final Promise<R> rval = new Promise<>();
-        rval.succeed(v);
-        return rval;
-
-    }
 
     private boolean completed = false;
 
@@ -166,60 +123,33 @@ public final class Promise<T> {
 
     }
 
-    /**
-     * <p>
-     * Transform the value. Produces a new promise that will be fulfilled
-     * independently if this promise is fulfilled. If this promise is fulfilled,
-     * a new promise is produced and placed upstream of the returned promise. If
-     * this promise is broken, the returned promise is broken immediately and
-     * the mapping function is not invoked.
-     * </p>
-     *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            produced promise's value type.
-     *
-     * @param mf
-     *            mapping function. Must not be null although the implementation
-     *            is not required to check for a null value if it can determine
-     *            it will not be invoked.
-     *
-     * @return new promise of the transformed value.
-     *
-     */
-    public <R> Promise<R> flatMap(
-            final FunctionX<? super T, Promise<? extends R>> mf) {
+    public void emit(final ConsumerX<? super Either<T, Throwable>> h) {
 
-        Objects.requireNonNull(mf);
-
-        final Promise<R> rval = new Promise<>();
+        Objects.requireNonNull(h);
 
         final Link<T> link = new Link<T>() {
+
             @Override
             public void next(final T value, final Throwable x) {
 
+                final Either<T, Throwable> result;
                 if (x == null) {
-                    final Promise<? extends R> upstream;
-                    try {
-                        upstream = mf.apply(value);
-                    } catch (final Throwable t) {
-                        rval.fail(t);
-                        return;
-                    }
-                    upstream.forEach(rval::succeed);
-                    upstream.on(Throwable.class, rval::fail);
+                    result = Either.left(value);
                 } else {
-                    rval.fail(x);
+                    result = Either.right(x);
                 }
+                try {
+                    h.accept(result);
+                } catch (final Throwable e) {
+                    /*
+                     * silently ignore error in destination.
+                     */
+                }
+
             }
         };
 
         dispatch(link);
-
-        return rval;
 
     }
 
@@ -448,6 +378,63 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Transform the value. Produces a new promise that will be fulfilled
+     * independently if this promise is fulfilled. If this promise is fulfilled,
+     * a new promise is produced and placed upstream of the returned promise. If
+     * this promise is broken, the returned promise is broken immediately and
+     * the mapping function is not invoked.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown by the continuation is passed downstream
+     * </p>
+     *
+     * @param <R>
+     *            produced promise's value type.
+     *
+     * @param mf
+     *            mapping function. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @return new promise of the transformed value.
+     *
+     */
+    public <R> Promise<R> then(
+            final FunctionX<? super T, Promise<? extends R>> mf) {
+
+        Objects.requireNonNull(mf);
+
+        final Promise<R> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                if (x == null) {
+                    final Promise<? extends R> upstream;
+                    try {
+                        upstream = mf.apply(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
+                    upstream.forEach(rval::succeed);
+                    upstream.on(Throwable.class, rval::fail);
+                } else {
+                    rval.fail(x);
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+
+    }
+
+    /**
+     * <p>
      * Transform the value, potentially retrying on failure. Produces a new
      * promise that will be fulfilled independently if this promise is
      * fulfilled. If this promise is fulfilled, a promise function is invoked
@@ -474,7 +461,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * If retry is not required, use {@link #flatMap(FunctionX)} instead.
+     * If retry is not required, use {@link #then(FunctionX)} instead.
      * </p>
      *
      * @param <R>
@@ -549,6 +536,31 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+    }
+
+    /**
+     * Convert to a blocking future.
+     *
+     * @return
+     */
+    public Future<T> toBlocking() {
+
+        final FutureAdapter<T> rval = new FutureAdapter<>();
+        dispatch(rval);
+        return rval;
+
+    }
+
+    void complete(final Either<? extends T, ? extends Throwable> e) {
+
+        e.forEach(v -> {
+            complete(v, null);
+        });
+
+        e.swap().forEach(x -> {
+            complete(null, x);
+        });
+
     }
 
     void fail(final Throwable x) {

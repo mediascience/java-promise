@@ -26,6 +26,7 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class AsyncMapTest {
 
@@ -59,7 +60,7 @@ public class AsyncMapTest {
 
         this.x = new Exception();
 
-        this.a = new Async<>();
+        this.a = Promises.async();
         this.m = this.a.promise().map(v -> tf.apply(v));
 
         this.f = tf;

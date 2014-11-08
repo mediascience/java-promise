@@ -17,15 +17,63 @@
 package example.com.msiops.ground.promise;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.msiops.ground.either.Either;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public enum Example implements Runnable {
+
+    ADAPT_BLOCKING {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final ExecutorService exec = Executors.newCachedThreadPool();
+try {
+// BEGIN FOR DOCUMENTATION
+final CountDownLatch done = new CountDownLatch(1);
+final AtomicInteger cap = new AtomicInteger();
+
+// to blocking
+final Async<Integer> src = Promises.async();
+final Future<Integer> fv = src.promise().toBlocking();
+
+// from blocking
+final Async<Integer> dest = Promises.async();
+dest.promise().forEach(v -> {
+    cap.set(v);
+    done.countDown();
+});
+final Runnable task = dest.when(fv);
+exec.execute(task); // or just task.run() to block this thread
+
+src.succeed(75);
+done.await();
+assert cap.get() == 75;
+// END FOR DOCUMENTATION
+} catch (final InterruptedException e) {
+    Thread.currentThread().interrupt();
+    throw new RuntimeException("interrupted");
+} finally {
+    exec.shutdown();
+}
+
+            // @formatter:on
+
+        }
+    },
 
     /**
      * Show how to create a promise that is already complete.
@@ -36,16 +84,25 @@ public enum Example implements Runnable {
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-final Promise<Integer> fulfilled = Promise.of(75);
+final Promise<Integer> fulfilled = Promises.fulfilled(75);
 fulfilled.forEach(vcap::set);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-final Promise<Integer> broken = Promise.broken(x);
+final Promise<Integer> broken = Promises.broken(x);
 broken.on(RuntimeException.class, ecap::set);
 assert ecap.get() == x;
 
+final AtomicInteger vcap2 = new AtomicInteger();
+final Promise<Integer> fulfilled2 = Promises.of(Either.left(75));
+fulfilled2.forEach(vcap2::set);
+assert vcap2.get() == 75;
+
+final AtomicReference<Exception> ecap2 = new AtomicReference<>();
+final Promise<Integer> broken2 = Promises.of(Either.right(x));
+broken2.on(RuntimeException.class, ecap2::set);
+assert ecap2.get() == x;
 
         // @formatter:on
         }
@@ -61,7 +118,7 @@ assert ecap.get() == x;
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-final Async<Integer> af = new Async<>();
+final Async<Integer> af = Promises.async();
 final Promise<Integer> toFulfill = af.promise();
 toFulfill.forEach(vcap::set);
 assert vcap.get() == 0;
@@ -69,13 +126,29 @@ af.succeed(75);
 assert vcap.get() == 75;
 
 final AtomicReference<Exception> ecap = new AtomicReference<>();
-final Async<Integer> ab = new Async<>();
+final Async<Integer> ab = Promises.async();
 final Promise<Integer> toBreak = ab.promise();
 toBreak.on(RuntimeException.class, ecap::set);
 assert ecap.get() == null;
 final Exception x = new RuntimeException();
 ab.fail(x);
 assert ecap.get() == x;
+
+final AtomicInteger vcap2 = new AtomicInteger();
+final Async<Integer> af2 = Promises.async();
+final Promise<Integer> toFulfill2 = af2.promise();
+toFulfill2.forEach(vcap2::set);
+assert vcap2.get() == 0;
+af2.complete(Either.left(75));
+assert vcap2.get() == 75;
+
+final AtomicReference<Exception> ecap2 = new AtomicReference<>();
+final Async<Integer> ab2 = Promises.async();
+final Promise<Integer> toBreak2 = ab2.promise();
+toBreak2.on(RuntimeException.class, ecap2::set);
+assert ecap2.get() == null;
+ab2.complete(Either.right(x));
+assert ecap2.get() == x;
 
             // @formatter:on
 
@@ -91,11 +164,11 @@ assert ecap.get() == x;
 
             // @formatter:off
 
-final Async<Object> toFulfill = new Async<>();
-final Async<Object> toBreak = new Async<>();
+final Async<Object> toFulfill = Promises.async();
+final Async<Object> toBreak = Promises.async();
 
-final Supplier<Promise<String>> finalizer = () -> Promise
-        .of("Finally!");
+final Supplier<Promise<String>> finalizer = () -> Promises
+        .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
 /*
@@ -132,35 +205,39 @@ assert cap2.get().equals("Finally!");
         }
     },
 
-    /**
-     * Show how to bind to downstream promise function.
-     */
-    FLATMAP {
-
+    LIFT {
         @Override
         public void run() {
 
             // @formatter:off
 
-final AtomicReference<Object> vcap = new AtomicReference<>();
-final Async<Object> inner = new Async<>();
-Promise.of(75).flatMap(i -> inner.promise())
-        .forEach(vcap::set);
-assert vcap.get() == null;
-inner.succeed("Hello");
-assert vcap.get().equals("Hello");
+final Function<Promise<Integer>, Promise<Integer>> lifted = Promises
+        .lift(i -> 2 * i);
 
+final AtomicInteger cap1 = new AtomicInteger();
+final AtomicInteger cap2 = new AtomicInteger();
+final AtomicReference<Object> cap3 = new AtomicReference<>();
 
-final AtomicReference<Object> ecap = new AtomicReference<>();
+final Promise<Integer> p1 = Promises.fulfilled(75);
+lifted.apply(p1).forEach(cap1::set);
+assert cap1.get() == 150;
+
+final Async<Integer> a2 = Promises.async();
+lifted.apply(a2.promise()).forEach(cap2::set);
+assert cap2.get() == 0;
+a2.succeed(75);
+assert cap2.get() == 150;
+
+final Async<Integer> a3 = Promises.async();
+lifted.apply(a3.promise()).on(Throwable.class, cap3::set);
+assert cap3.get() == null;
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
-    .flatMap(i -> Promise.of("Hello")) // lambda expr not invoked
-    .on(RuntimeException.class, ecap::set);
-assert ecap.get() == x;
+a3.fail(x);
+assert cap3.get() == x;
 
             // @formatter:on
 
-        };
+        }
     },
 
     /**
@@ -173,12 +250,12 @@ assert ecap.get() == x;
             // @formatter:off
 
 final AtomicInteger vcap = new AtomicInteger();
-Promise.of(75).map(i -> i * 2).forEach(vcap::set);
+Promises.fulfilled(75).map(i -> i * 2).forEach(vcap::set);
 assert vcap.get() == 150;
 
 final AtomicReference<Object> ecap = new AtomicReference<>();
 final Exception x = new RuntimeException();
-Promise.<Integer>broken(x)
+Promises.<Integer>broken(x)
     .map(i -> i * 2) // lambda expr not invoked
     .on(Throwable.class, ecap::set);
 assert ecap.get() == x;
@@ -202,9 +279,9 @@ final AtomicReference<Object> ecap = new AtomicReference<>();
 final AtomicReference<Object> rcap = new AtomicReference<>();
 
 final Exception x = new RuntimeException();
-final Promise<?> p = Promise.broken(x);
+final Promise<?> p = Promises.broken(x);
 p.on(Throwable.class, ecap::set);
-p.recover(Exception.class, err -> Promise.of("Recovered!"))
+p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(rcap::set);
 
 assert ecap.get() == x;
@@ -214,9 +291,9 @@ assert rcap.get().equals(Optional.of("Recovered!"));
 final AtomicInteger vcap = new AtomicInteger();
 final AtomicReference<Object> scap = new AtomicReference<Object>();
 
-final Promise<Integer> q = Promise.of(75);
+final Promise<Integer> q = Promises.fulfilled(75);
 q.forEach(vcap::set);
-q.recover(Exception.class, err -> Promise.of("Recovered!"))
+q.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(scap::set);
 
 assert vcap.get() == 75;
@@ -227,9 +304,40 @@ assert scap.get().equals(Optional.empty());
     },
 
     /**
+     * Show how to bind to downstream promise function.
+     */
+    THEN {
+
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final AtomicReference<Object> vcap = new AtomicReference<>();
+final Async<Object> inner = Promises.async();
+Promises.fulfilled(75).then(i -> inner.promise())
+        .forEach(vcap::set);
+assert vcap.get() == null;
+inner.succeed("Hello");
+assert vcap.get().equals("Hello");
+
+
+final AtomicReference<Object> ecap = new AtomicReference<>();
+final Exception x = new RuntimeException();
+Promises.<Integer>broken(x)
+    .then(i -> Promises.fulfilled("Hello")) // lambda expr not invoked
+    .on(RuntimeException.class, ecap::set);
+assert ecap.get() == x;
+
+            // @formatter:on
+
+        };
+    },
+
+    /**
      * Show how to retry on failure.
      */
-    RETRY {
+    THEN_RETRY {
         @Override
         public void run() {
 
@@ -239,12 +347,12 @@ final AtomicBoolean condition = new AtomicBoolean();
 final AtomicReference<Async<Boolean>> pendingRetry = new AtomicReference<Async<Boolean>>();
 final AtomicReference<Object> vcap = new AtomicReference<>();
 
-Promise.of(75)
+Promises.fulfilled(75)
     .then(i -> {
-        return condition.get() ? Promise.of("Done!")
-                : Promise.broken(new RuntimeException());
+        return condition.get() ? Promises.fulfilled("Done!")
+                : Promises.broken(new RuntimeException());
     }, (x, u) -> {
-        pendingRetry.set(new Async<>());
+        pendingRetry.set(Promises.async());
         return pendingRetry.get().promise();
     }).forEach(vcap::set);
 

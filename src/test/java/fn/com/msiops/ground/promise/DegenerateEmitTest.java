@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
+import com.msiops.ground.promise.Promises;
 
 public class DegenerateEmitTest {
 
@@ -44,8 +45,8 @@ public class DegenerateEmitTest {
         this.x = new Exception();
 
         this.value = 12;
-        this.pfulfilled = Promise.of(this.value);
-        this.pbroken = Promise.broken(this.x);
+        this.pfulfilled = Promises.fulfilled(this.value);
+        this.pbroken = Promises.broken(this.x);
 
         this.c = tc;
 
@@ -57,6 +58,57 @@ public class DegenerateEmitTest {
         this.pbroken.forEach(this.c);
 
         verify(this.c, never()).accept(any());
+
+    }
+
+    @Test
+    public void testBrokenEmit() throws Throwable {
+
+        this.pbroken.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c).accept(this.x);
+
+    }
+
+    @Test
+    public void testBrokenEmitMultiple() throws Throwable {
+
+        this.pbroken.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.pbroken.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, times(2)).accept(this.x);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testBrokenEmitNullconsumerIllegal() {
+
+        this.pbroken.emit(null);
 
     }
 
@@ -126,6 +178,57 @@ public class DegenerateEmitTest {
         this.pfulfilled.on(Throwable.class, this.c);
 
         verify(this.c, never()).accept(any());
+
+    }
+
+    @Test
+    public void testFulfilledEmit() throws Throwable {
+
+        this.pfulfilled.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c).accept(this.value);
+
+    }
+
+    @Test
+    public void testFulfilledEmitMultiple() throws Throwable {
+
+        this.pfulfilled.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.pfulfilled.emit(e -> {
+            e.forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, times(2)).accept(this.value);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testFulfilledEmitNullconsumerIllegal() {
+
+        this.pfulfilled.emit(null);
 
     }
 
