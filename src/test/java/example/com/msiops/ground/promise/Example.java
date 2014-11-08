@@ -17,6 +17,10 @@
 package example.com.msiops.ground.promise;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,6 +33,47 @@ import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public enum Example implements Runnable {
+
+    ADAPT_BLOCKING {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final ExecutorService exec = Executors.newCachedThreadPool();
+try {
+// BEGIN FOR DOCUMENTATION
+final CountDownLatch done = new CountDownLatch(1);
+final AtomicInteger cap = new AtomicInteger();
+
+// to blocking
+final Async<Integer> src = Promises.async();
+final Future<Integer> fv = src.promise().toBlocking();
+
+// from blocking
+final Async<Integer> dest = Promises.async();
+dest.promise().forEach(v -> {
+    cap.set(v);
+    done.countDown();
+});
+final Runnable task = dest.when(fv);
+exec.execute(task); // or just task.run() to block this thread
+
+src.succeed(75);
+done.await();
+assert cap.get() == 75;
+// END FOR DOCUMENTATION
+} catch (final InterruptedException e) {
+    Thread.currentThread().interrupt();
+    throw new RuntimeException("interrupted");
+} finally {
+    exec.shutdown();
+}
+
+            // @formatter:on
+
+        }
+    },
 
     /**
      * Show how to create a promise that is already complete.

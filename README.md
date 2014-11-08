@@ -282,6 +282,29 @@ a3.fail(x);
 assert cap3.get() == x;
 ```
 
+### Adapt Blocking Source or Dest
+```java
+final CountDownLatch done = new CountDownLatch(1);
+final AtomicInteger cap = new AtomicInteger();
+
+// to blocking
+final Async<Integer> src = Promises.async();
+final Future<Integer> fv = src.promise().toBlocking();
+
+// from blocking
+final Async<Integer> dest = Promises.async();
+dest.promise().forEach(v -> {
+    cap.set(v);
+    done.countDown();
+});
+final Runnable task = dest.when(fv);
+exec.execute(task); // or just task.run() to block this thread
+
+src.succeed(75);
+done.await();
+assert cap.get() == 75;
+```
+
 ## Versioning
 
 Releases in the 0.x series are the Wild West. Anything can change between
