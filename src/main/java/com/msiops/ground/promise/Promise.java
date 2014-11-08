@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.msiops.ground.either.Either;
 
@@ -228,7 +229,7 @@ public final class Promise<T> {
      *
      * @return promise of transformed value.
      */
-    public <R> Promise<R> map(final FunctionX<? super T, ? extends R> f) {
+    public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
 
         Objects.requireNonNull(f);
 
