@@ -401,8 +401,7 @@ public final class Promise<T> {
      * @return new promise of the transformed value.
      *
      */
-    public <R> Promise<R> then(
-            final FunctionX<? super T, Promise<? extends R>> mf) {
+    public <R> Promise<R> then(final FunctionX<? super T, Promise<R>> mf) {
 
         Objects.requireNonNull(mf);
 
@@ -479,8 +478,7 @@ public final class Promise<T> {
      * @return new promise of the transformed value.
      *
      */
-    public <R> Promise<R> then(
-            final FunctionX<? super T, Promise<? extends R>> mf,
+    public <R> Promise<R> then(final FunctionX<? super T, Promise<R>> mf,
             final BiFunctionX<Throwable, Integer, Promise<Boolean>> retry) {
 
         Objects.requireNonNull(mf);
