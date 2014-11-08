@@ -229,7 +229,7 @@ public final class Promise<T> {
      *
      * @return promise of transformed value.
      */
-    public <R> Promise<R> map(final Function<? super T, ? extends R> f) {
+    public <R> Promise<R> map(final Function<? super T, R> f) {
 
         Objects.requireNonNull(f);
 
