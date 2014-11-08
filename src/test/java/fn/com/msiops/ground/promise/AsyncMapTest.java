@@ -19,12 +19,13 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
-import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
@@ -32,9 +33,9 @@ public class AsyncMapTest {
 
     private Async<Integer> a;
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
-    private FunctionX<Integer, Object> f;
+    private Function<Integer, Object> f;
 
     private Promise<Object> m;
 
@@ -48,10 +49,10 @@ public class AsyncMapTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Object> tf = mock(FunctionX.class);
+        final Function<Integer, Object> tf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.value = 12;
 

@@ -19,19 +19,19 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class AsyncDeferTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Promise<Object> d;
 
@@ -54,7 +54,7 @@ public class AsyncDeferTest {
         final Supplier<Promise<Object>> tsrc = mock(Supplier.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.outer = Promises.async();
         this.inner = Promises.async();

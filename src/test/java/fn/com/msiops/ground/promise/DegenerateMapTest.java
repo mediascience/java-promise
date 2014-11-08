@@ -19,18 +19,18 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class DegenerateMapTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Function<Integer, Object> f;
 
@@ -49,7 +49,7 @@ public class DegenerateMapTest {
         final Function<Integer, Object> tf = mock(Function.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.value = 12;
         this.fulfilled = Promises.fulfilled(this.value);

@@ -19,18 +19,19 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class AsyncThenTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Async<Object> inner;
 
@@ -53,7 +54,7 @@ public class AsyncThenTest {
         final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.inner = Promises.async();
         this.outer = Promises.async();

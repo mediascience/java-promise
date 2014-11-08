@@ -18,18 +18,19 @@ package fn.com.msiops.ground.promise;
 
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 import com.msiops.ground.promise.SupplierX;
 
 public class DegenerateDeferTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
@@ -50,7 +51,7 @@ public class DegenerateDeferTest {
         final SupplierX<Promise<Object>> tsrc = mock(SupplierX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.inner = Promises.async();
 

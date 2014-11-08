@@ -85,7 +85,7 @@ public interface Promises {
      * @return lifted function
      */
     public static <T, R> Function<Promise<T>, Promise<R>> lift(
-            final FunctionX<T, R> f) {
+            final Function<T, R> f) {
 
         return pv -> pv.map(f);
 
