@@ -16,10 +16,13 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import com.msiops.ground.either.Either;
 
@@ -72,6 +75,39 @@ public interface Promises {
         final Promise<R> rval = new Promise<>();
         rval.succeed(v);
         return rval;
+
+    }
+
+    public static <T> Promise<List<T>> join(final List<Promise<T>> unjoined) {
+
+        final AtomicInteger remaining = new AtomicInteger(unjoined.size());
+
+        final Promise<List<T>> downstream = new Promise<>();
+
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) new Object[unjoined.size()];
+
+        IntStream.range(0, unjoined.size()).forEach(i -> {
+            /*
+             * fetch upstream one time in case list is not random access.
+             */
+            final Promise<T> upstream = unjoined.get(i);
+            upstream.forEach(v -> {
+                result[i] = v;
+                if (remaining.decrementAndGet() == 0) {
+                    downstream.succeed(Arrays.asList(result));
+                }
+            });
+            /*
+             * the first promise to break breaks the downstream with the same
+             * error. note that this does not decrement the remaining counter,
+             * preventing the above forEach from fulfilling the downstream
+             * promise.
+             */
+            upstream.on(Throwable.class, downstream::fail);
+        });
+
+        return downstream;
 
     }
 
@@ -143,5 +179,4 @@ public interface Promises {
         return control.promise();
 
     }
-
 }
