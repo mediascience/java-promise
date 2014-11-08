@@ -18,6 +18,8 @@ package com.msiops.ground.promise;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.msiops.ground.either.Either;
@@ -126,6 +128,29 @@ public final class Async<T> {
             }
         };
 
+    }
+
+    public Runnable when(final Future<T> fv, final long timeout,
+            final TimeUnit unit) {
+        race();
+        return new Runnable() {
+
+            @Override
+            public void run() {
+
+                try {
+                    Async.this.p.succeed(fv.get(timeout, unit));
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    Async.this.p.fail(e);
+                } catch (final ExecutionException e) {
+                    Async.this.p.fail(e.getCause());
+                } catch (final TimeoutException e) {
+                    Async.this.p.fail(e);
+                }
+
+            }
+        };
     }
 
     private void race() {

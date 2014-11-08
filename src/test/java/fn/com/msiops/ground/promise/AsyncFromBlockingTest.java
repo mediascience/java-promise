@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
@@ -86,6 +88,24 @@ public class AsyncFromBlockingTest {
     }
 
     @Test
+    public void testAlreadyBrokenImpatient() throws InterruptedException {
+
+        this.async.promise().on(Throwable.class, this::setResult);
+
+        final Promise<Integer> p = Promises.broken(this.x);
+
+        final Runnable task = this.async.when(p.toBlocking(), 10,
+                TimeUnit.SECONDS);
+
+        this.exec.execute(task);
+
+        this.done.await();
+
+        assertEquals(this.x, this.result.get());
+
+    }
+
+    @Test
     public void testAlreadyFulfilled() throws InterruptedException {
 
         this.async.promise().forEach(this::setResult);
@@ -100,6 +120,40 @@ public class AsyncFromBlockingTest {
 
         assertEquals(this.value, this.result.get());
 
+    }
+
+    @Test
+    public void testAlreadyFulfilledImpatient() throws InterruptedException {
+
+        this.async.promise().forEach(this::setResult);
+
+        final Promise<Integer> p = Promises.fulfilled(this.value);
+
+        final Runnable task = this.async.when(p.toBlocking(), 10,
+                TimeUnit.SECONDS);
+
+        this.exec.execute(task);
+
+        this.done.await();
+
+        assertEquals(this.value, this.result.get());
+
+    }
+
+    @Test
+    public void testTimeout() throws InterruptedException {
+
+        this.async.promise().on(Throwable.class, this::setResult);
+
+        final Async<Integer> src = Promises.async();
+        final Runnable task = this.async.when(src.promise().toBlocking(), 10,
+                TimeUnit.MILLISECONDS);
+
+        this.exec.execute(task);
+
+        this.done.await();
+
+        assertTrue(this.result.get() instanceof TimeoutException);
     }
 
     @Test
@@ -125,12 +179,58 @@ public class AsyncFromBlockingTest {
     }
 
     @Test
+    public void testWaitBrokenImpatiently() throws InterruptedException {
+
+        this.async.promise().on(Throwable.class, this::setResult);
+
+        final Async<Integer> src = Promises.async();
+        final Runnable task = this.async.when(src.promise().toBlocking(), 10,
+                TimeUnit.SECONDS);
+
+        this.exec.execute(task);
+
+        /*
+         * give the task a chance to become blocked
+         */
+        Thread.sleep(75);
+
+        src.fail(this.x);
+
+        this.done.await();
+
+        assertEquals(this.x, this.result.get());
+    }
+
+    @Test
     public void testWaitFulfilled() throws InterruptedException {
 
         this.async.promise().forEach(this::setResult);
 
         final Async<Integer> src = Promises.async();
         final Runnable task = this.async.when(src.promise().toBlocking());
+
+        this.exec.execute(task);
+
+        /*
+         * give the task a chance to become blocked
+         */
+        Thread.sleep(75);
+
+        src.succeed(this.value);
+
+        this.done.await();
+
+        assertEquals(this.value, this.result.get());
+    }
+
+    @Test
+    public void testWaitFulfilledImpatiently() throws InterruptedException {
+
+        this.async.promise().forEach(this::setResult);
+
+        final Async<Integer> src = Promises.async();
+        final Runnable task = this.async.when(src.promise().toBlocking(), 10,
+                TimeUnit.SECONDS);
 
         this.exec.execute(task);
 
