@@ -20,19 +20,19 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class AsyncRecoverTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Async<Object> inner;
     private Async<Integer> outer;
@@ -54,7 +54,7 @@ public class AsyncRecoverTest {
         final FunctionX<Exception, Promise<Object>> trf = mock(FunctionX.class);
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.outer = Promises.async();
         this.inner = Promises.async();

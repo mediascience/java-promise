@@ -19,11 +19,12 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.function.Consumer;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
@@ -31,7 +32,7 @@ public class AsyncEmitTest {
 
     private Async<Integer> a;
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Promise<Integer> p;
 
@@ -43,7 +44,7 @@ public class AsyncEmitTest {
     public void setup() {
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.x = new Exception();
 

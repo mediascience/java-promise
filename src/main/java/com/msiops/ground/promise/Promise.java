@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import com.msiops.ground.either.Either;
 
@@ -123,7 +124,7 @@ public final class Promise<T> {
 
     }
 
-    public void emit(final ConsumerX<? super Either<T, Throwable>> h) {
+    public void emit(final Consumer<? super Either<T, Throwable>> h) {
 
         Objects.requireNonNull(h);
 
@@ -175,7 +176,7 @@ public final class Promise<T> {
      * @throws NullPointerException
      *             if the handler is null and the promise is not broken.
      */
-    public void forEach(final ConsumerX<? super T> h) {
+    public void forEach(final Consumer<? super T> h) {
 
         Objects.requireNonNull(h);
 
@@ -287,7 +288,7 @@ public final class Promise<T> {
      *             fulfilled.
      */
     public <X extends Throwable> void on(final Class<X> sel,
-            final ConsumerX<? super X> h) {
+            final Consumer<? super X> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);

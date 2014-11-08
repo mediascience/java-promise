@@ -22,18 +22,18 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.ConsumerX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
 public class AsyncThenRetryTest {
 
-    private ConsumerX<Object> c;
+    private Consumer<Object> c;
 
     private Async<Integer> outer;
 
@@ -56,7 +56,7 @@ public class AsyncThenRetryTest {
         this.retries = new ArrayList<>();
 
         @SuppressWarnings("unchecked")
-        final ConsumerX<Object> tc = mock(ConsumerX.class);
+        final Consumer<Object> tc = mock(Consumer.class);
 
         this.value = 12;
 
