@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.msiops.footing.functional.SupplierT;
 import com.msiops.ground.either.Either;
 
 /**
@@ -94,7 +95,7 @@ public final class Promise<T> {
      *
      * @return promise to compute a new value when this promise complete.
      */
-    public <R> Promise<R> defer(final SupplierX<Promise<R>> src) {
+    public <R> Promise<R> defer(final SupplierT<Promise<R>> src) {
 
         Objects.requireNonNull(src);
 

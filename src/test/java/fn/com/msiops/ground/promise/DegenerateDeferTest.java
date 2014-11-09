@@ -23,10 +23,10 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.footing.functional.SupplierT;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
-import com.msiops.ground.promise.SupplierX;
 
 public class DegenerateDeferTest {
 
@@ -38,7 +38,7 @@ public class DegenerateDeferTest {
 
     private Object rvalue;
 
-    private SupplierX<Promise<Object>> src;
+    private SupplierT<Promise<Object>> src;
 
     private Integer value;
 
@@ -48,7 +48,7 @@ public class DegenerateDeferTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final SupplierX<Promise<Object>> tsrc = mock(SupplierX.class);
+        final SupplierT<Promise<Object>> tsrc = mock(SupplierT.class);
 
         @SuppressWarnings("unchecked")
         final Consumer<Object> tc = mock(Consumer.class);

@@ -26,11 +26,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import com.msiops.footing.functional.SupplierT;
 import com.msiops.ground.either.Either;
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
-import com.msiops.ground.promise.SupplierX;
 
 public enum Example implements Runnable {
 
@@ -167,7 +167,7 @@ assert ecap2.get() == x;
 final Async<Object> toFulfill = Promises.async();
 final Async<Object> toBreak = Promises.async();
 
-final SupplierX<Promise<String>> finalizer = () -> Promises
+final SupplierT<Promise<String>> finalizer = () -> Promises
         .fulfilled("Finally!");
 
 final AtomicReference<String> cap1 = new AtomicReference<String>();
