@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.footing.functional.FunT1;
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
@@ -37,7 +37,7 @@ public class AsyncThenTest {
 
     private Promise<Object> m;
 
-    private FunctionX<Integer, Promise<Object>> mf;
+    private FunT1<Integer, Promise<Object>> mf;
 
     private Async<Integer> outer;
 
@@ -51,7 +51,7 @@ public class AsyncThenTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
+        final FunT1<Integer, Promise<Object>> tmf = mock(FunT1.class);
 
         @SuppressWarnings("unchecked")
         final Consumer<Object> tc = mock(Consumer.class);

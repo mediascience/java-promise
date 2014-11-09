@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.footing.functional.FunT1;
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
@@ -37,7 +37,7 @@ public class DegenerateThenTest {
 
     private Async<Object> inner;
 
-    private FunctionX<Integer, Promise<Object>> mf;
+    private FunT1<Integer, Promise<Object>> mf;
 
     private Object rvalue;
 
@@ -49,7 +49,7 @@ public class DegenerateThenTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Integer, Promise<Object>> tmf = mock(FunctionX.class);
+        final FunT1<Integer, Promise<Object>> tmf = mock(FunT1.class);
 
         @SuppressWarnings("unchecked")
         final Consumer<Object> tc = mock(Consumer.class);

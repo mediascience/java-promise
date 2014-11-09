@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import com.msiops.footing.functional.FunT1;
 import com.msiops.ground.either.Either;
 
 public interface Promises {
@@ -150,7 +151,7 @@ public interface Promises {
      * @return lifted function
      */
     public static <T, R> Function<Promise<T>, Promise<R>> liftP(
-            final FunctionX<T, Promise<R>> f) {
+            final FunT1<T, Promise<R>> f) {
 
         return pv -> pv.then(f);
 

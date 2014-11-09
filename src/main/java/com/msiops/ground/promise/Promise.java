@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.msiops.footing.functional.FunT1;
 import com.msiops.footing.functional.FunT2;
 import com.msiops.footing.functional.SupplierT;
 import com.msiops.ground.either.Either;
@@ -343,7 +344,7 @@ public final class Promise<T> {
      * @return new promise to recover from failure.
      */
     public <R, X extends Throwable> Promise<Optional<R>> recover(
-            final Class<X> sel, final FunctionX<? super X, Promise<R>> h) {
+            final Class<X> sel, final FunT1<? super X, Promise<R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
@@ -404,7 +405,7 @@ public final class Promise<T> {
      * @return new promise of the transformed value.
      *
      */
-    public <R> Promise<R> then(final FunctionX<? super T, Promise<R>> mf) {
+    public <R> Promise<R> then(final FunT1<? super T, Promise<R>> mf) {
 
         Objects.requireNonNull(mf);
 
@@ -464,7 +465,7 @@ public final class Promise<T> {
      * </p>
      *
      * <p>
-     * If retry is not required, use {@link #then(FunctionX)} instead.
+     * If retry is not required, use {@link #then(FunT1)} instead.
      * </p>
      *
      * @param <R>
@@ -481,7 +482,7 @@ public final class Promise<T> {
      * @return new promise of the transformed value.
      *
      */
-    public <R> Promise<R> then(final FunctionX<? super T, Promise<R>> mf,
+    public <R> Promise<R> then(final FunT1<? super T, Promise<R>> mf,
             final FunT2<Throwable, Integer, Promise<Boolean>> retry) {
 
         Objects.requireNonNull(mf);

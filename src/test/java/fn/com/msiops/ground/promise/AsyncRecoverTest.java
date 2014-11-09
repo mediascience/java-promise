@@ -25,8 +25,8 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.msiops.footing.functional.FunT1;
 import com.msiops.ground.promise.Async;
-import com.msiops.ground.promise.FunctionX;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
@@ -39,7 +39,7 @@ public class AsyncRecoverTest {
 
     private Promise<Optional<Object>> r;
 
-    private FunctionX<Exception, Promise<Object>> rf;
+    private FunT1<Exception, Promise<Object>> rf;
 
     private Object rvalue;
 
@@ -51,7 +51,7 @@ public class AsyncRecoverTest {
     public void setup() throws Throwable {
 
         @SuppressWarnings("unchecked")
-        final FunctionX<Exception, Promise<Object>> trf = mock(FunctionX.class);
+        final FunT1<Exception, Promise<Object>> trf = mock(FunT1.class);
 
         @SuppressWarnings("unchecked")
         final Consumer<Object> tc = mock(Consumer.class);
