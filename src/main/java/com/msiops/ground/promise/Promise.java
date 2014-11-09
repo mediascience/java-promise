@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.msiops.footing.functional.FunT2;
 import com.msiops.footing.functional.SupplierT;
 import com.msiops.ground.either.Either;
 
@@ -481,7 +482,7 @@ public final class Promise<T> {
      *
      */
     public <R> Promise<R> then(final FunctionX<? super T, Promise<R>> mf,
-            final BiFunctionX<Throwable, Integer, Promise<Boolean>> retry) {
+            final FunT2<Throwable, Integer, Promise<Boolean>> retry) {
 
         Objects.requireNonNull(mf);
         Objects.requireNonNull(retry);
