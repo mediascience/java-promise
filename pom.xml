@@ -39,7 +39,7 @@
       <dependency>
         <groupId>com.msiops.ground</groupId>
         <artifactId>ground-either</artifactId>
-        <version>0.10</version>
+        <version>0.11</version>
       </dependency>
       <dependency>
         <groupId>com.msiops.footing</groupId>
