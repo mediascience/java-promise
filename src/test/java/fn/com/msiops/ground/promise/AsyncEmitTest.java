@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 import org.junit.Before;
@@ -169,6 +170,123 @@ public class AsyncEmitTest {
     public void testBrokenNullSelectorIllegal() {
 
         this.a.fail(this.x);
+        this.p.on(null, this.c);
+
+    }
+
+    @Test
+    public void testCanceledEmit() throws Throwable {
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.cancel();
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledEmitMultiple() throws Throwable {
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.p.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, never()).accept(any());
+
+        this.a.cancel();
+
+        verify(this.c, times(2)).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledHandleError() throws Throwable {
+
+        this.p.on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.a.cancel();
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledHandleErrorMultiple() throws Throwable {
+
+        this.p.on(Throwable.class, this.c);
+        this.p.on(Throwable.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+        this.a.cancel();
+
+        verify(this.c, times(2)).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledHandleSelectedError() throws Throwable {
+
+        this.p.on(CancellationException.class, this.c);
+
+        this.a.cancel();
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledNotHandleNotSelectedError() throws Throwable {
+
+        this.p.on(NullPointerException.class, this.c);
+
+        this.a.cancel();
+
+        verify(this.c, never()).accept(any());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCanceledNullErrorHandlerIllegal() {
+
+        this.a.cancel();
+        this.p.on(Throwable.class, null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCanceledNullSelectorIllegal() {
+
+        this.a.cancel();
         this.p.on(null, this.c);
 
     }
