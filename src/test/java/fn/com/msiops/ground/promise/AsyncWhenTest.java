@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -93,12 +94,15 @@ public class AsyncWhenTest {
 
         this.a.promise().when(this.ptrue).forEach(this.cval::accept);
         this.a.promise().when(this.ptrue).forEach(this.cval::accept);
-        this.a.promise().when(this.pfalse).forEach(this.cval::accept);
-        this.a.promise().when(this.pfalse).forEach(this.cval::accept);
+        this.a.promise().when(this.pfalse)
+                .on(CancellationException.class, this.cx::accept);
+        this.a.promise().when(this.pfalse)
+                .on(CancellationException.class, this.cx::accept);
 
         this.a.succeed(this.value);
 
         verify(this.cval, times(2)).accept(this.value);
+        verify(this.cx, times(2)).accept(any(CancellationException.class));
 
     }
 
@@ -144,7 +148,7 @@ public class AsyncWhenTest {
         this.a.succeed(this.value);
 
         verify(this.cval, never()).accept(any());
-        verify(this.cx, never()).accept(any());
+        verify(this.cx).accept(any(CancellationException.class));
 
     }
 

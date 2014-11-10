@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -35,15 +36,22 @@ public class UsageTest {
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakBrokenFails() {
         final Async<Object> a = Promises.async();
-        a.succeed(new RuntimeException());
-        a.succeed(new RuntimeException());
+        a.fail(new RuntimeException());
+        a.fail(new RuntimeException());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncBreakCanceledFails() {
+        final Async<Object> a = Promises.async();
+        a.cancel();
+        a.fail(new RuntimeException());
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAsyncBreakFulfilledFails() {
         final Async<Object> a = Promises.async();
         a.succeed(25);
-        a.succeed(new RuntimeException());
+        a.fail(new RuntimeException());
     }
 
     @Test
@@ -59,6 +67,31 @@ public class UsageTest {
         a.complete(Either.right(x));
 
         assertEquals(x, actual.get());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncCancelBrokenFails() {
+        final Async<Object> a = Promises.async();
+        a.fail(new RuntimeException());
+        a.cancel();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncCancelFulfilledFails() {
+        final Async<Object> a = Promises.async();
+        a.fail(new RuntimeException());
+        a.succeed(25);
+    }
+
+    public void testAsyncCancelled() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        final Async<?> a = Promises.async();
+        a.cancel();
+
+        assertTrue(cap.get() instanceof CancellationException);
+
     }
 
     @Test(expected = NullPointerException.class)
@@ -80,6 +113,13 @@ public class UsageTest {
         final Async<Object> a = Promises.async();
         a.succeed(new RuntimeException());
         a.succeed(25);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testAsyncFulfillCanceledFails() {
+        final Async<Object> a = Promises.async();
+        a.succeed(25);
+        a.fail(new RuntimeException());
     }
 
     @Test
@@ -112,6 +152,24 @@ public class UsageTest {
 
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testBreakWatchedIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.watch(Promises.fulfilled(999).toBlocking());
+        a.fail(new RuntimeException());
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCancelWatchedIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.watch(Promises.fulfilled(999).toBlocking());
+        a.cancel();
+
+    }
+
     @Test
     public void testDegenerateBrokenFromEither() {
 
@@ -127,6 +185,16 @@ public class UsageTest {
     public void testDegenerateBrokenNullInvalid() {
 
         Promises.broken(null);
+
+    }
+
+    @Test
+    public void testDegenerateCanceled() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        Promises.canceled().on(CancellationException.class, cap::set);
+        assertTrue(cap.get() instanceof CancellationException);
 
     }
 
@@ -150,6 +218,15 @@ public class UsageTest {
     public void testDegenerateFulfilledNullInvalid() {
 
         Promises.fulfilled(null);
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testFulfillWatchedIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.watch(Promises.fulfilled(999).toBlocking());
+        a.succeed(21);
 
     }
 
@@ -396,6 +473,33 @@ public class UsageTest {
         Promises.waitFor(p1, p2, p3).forEach(actual::set);
 
         assertEquals(1, actual.get());
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testWatchBrokenIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.fail(new RuntimeException());
+        a.watch(Promises.fulfilled(999).toBlocking());
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testWatchCancelledIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.cancel();
+        a.watch(Promises.fulfilled(999).toBlocking());
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testWatchFulfilledIllegal() {
+
+        final Async<Object> a = Promises.async();
+        a.succeed(21);
+        a.watch(Promises.fulfilled(999).toBlocking());
 
     }
 

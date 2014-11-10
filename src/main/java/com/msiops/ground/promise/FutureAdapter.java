@@ -16,7 +16,7 @@
  */
 package com.msiops.ground.promise;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +24,9 @@ import java.util.concurrent.TimeoutException;
 
 final class FutureAdapter<T> implements Future<T>, Link<T> {
 
-    private final CountDownLatch ready = new CountDownLatch(1);
+    private boolean canceled = false;
+
+    private final Object monitor = new Object();
 
     private T value = null;
 
@@ -32,17 +34,27 @@ final class FutureAdapter<T> implements Future<T>, Link<T> {
 
     @Override
     public boolean cancel(final boolean mayInterruptIfRunning) {
-        return false;
+
+        /*
+         * cancellation only succeeds if it has succeeded already.
+         */
+        return isCancelled();
     }
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
 
-        this.ready.await();
-        if (this.x != null) {
-            throw this.x;
-        } else {
-            return this.value;
+        synchronized (this.monitor) {
+            while (!complete()) {
+                this.monitor.wait();
+            }
+            if (this.canceled) {
+                throw new CancellationException();
+            } else if (this.x != null) {
+                throw this.x;
+            } else {
+                return this.value;
+            }
         }
     }
 
@@ -50,38 +62,65 @@ final class FutureAdapter<T> implements Future<T>, Link<T> {
     public T get(final long timeout, final TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
 
-        if (!this.ready.await(timeout, unit)) {
-            throw new TimeoutException();
-        }
+        final long deadline = System.currentTimeMillis()
+                + TimeUnit.MILLISECONDS.convert(timeout, unit);
 
-        if (this.x != null) {
-            throw this.x;
-        } else {
-            return this.value;
+        synchronized (this.monitor) {
+            while (!complete()) {
+                final long now = System.currentTimeMillis();
+                if (now >= deadline) {
+                    throw new TimeoutException();
+                }
+                this.monitor.wait(deadline - now);
+            }
+            if (this.canceled) {
+                throw new CancellationException();
+            } else if (this.x != null) {
+                throw this.x;
+            } else {
+                return this.value;
+            }
         }
     }
 
     @Override
     public boolean isCancelled() {
-        return false;
+
+        synchronized (this.monitor) {
+            return this.canceled;
+        }
     }
 
     @Override
     public boolean isDone() {
 
-        return this.ready.getCount() == 0;
+        return complete();
     }
 
     @Override
     public void next(final T pvalue, final Throwable px) {
 
-        if (px != null) {
-            this.x = new ExecutionException(px);
-        } else {
-            this.value = pvalue;
+        synchronized (this.monitor) {
+            if (px instanceof CancellationException) {
+                this.canceled = true;
+            } else if (px != null) {
+                this.x = new ExecutionException(px);
+            } else {
+                this.value = pvalue;
+            }
+            this.monitor.notifyAll();
         }
 
-        this.ready.countDown();
+    }
+
+    private boolean complete() {
+        synchronized (this.monitor) {
+            /*
+             * note that a null fulfilled value is illegal so at least one of
+             * these must be true on completion.
+             */
+            return this.canceled || this.value != null || this.x != null;
+        }
 
     }
 

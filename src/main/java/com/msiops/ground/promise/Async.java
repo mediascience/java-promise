@@ -16,6 +16,7 @@
  */
 package com.msiops.ground.promise;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +50,20 @@ public final class Async<T> {
     private final Promise<T> p = new Promise<>();
 
     Async() {
+
+    }
+
+    /**
+     * Cancel the promise. Cancellation is equivalent to breaking the promise
+     * with a {@link CancellationException}.
+     *
+     * @throws IllegalStateException
+     *             if the promise is already complete or watching.
+     */
+    public void cancel() {
+
+        race();
+        this.p.cancel();
 
     }
 
@@ -123,6 +138,11 @@ public final class Async<T> {
                     Async.this.p.fail(e);
                 } catch (final ExecutionException e) {
                     Async.this.p.fail(e.getCause());
+                } catch (final Throwable t) {
+                    /*
+                     * this handles cancellation.
+                     */
+                    Async.this.p.fail(t);
                 }
 
             }

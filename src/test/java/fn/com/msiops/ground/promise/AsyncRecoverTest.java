@@ -19,7 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 import org.junit.Before;
@@ -37,7 +37,7 @@ public class AsyncRecoverTest {
     private Async<Object> inner;
     private Async<Integer> outer;
 
-    private Promise<Optional<Object>> r;
+    private Promise<Object> r;
 
     private FunT1<Exception, Promise<Object>> rf;
 
@@ -92,7 +92,7 @@ public class AsyncRecoverTest {
         this.inner.succeed(this.rvalue);
 
         verify(this.rf, times(1)).apply(any());
-        verify(this.c, times(2)).accept(Optional.of(this.rvalue));
+        verify(this.c, times(2)).accept(this.rvalue);
 
     }
 
@@ -128,7 +128,7 @@ public class AsyncRecoverTest {
 
         this.inner.succeed(this.rvalue);
 
-        verify(this.c).accept(Optional.of(this.rvalue));
+        verify(this.c).accept(this.rvalue);
 
     }
 
@@ -168,17 +168,13 @@ public class AsyncRecoverTest {
     @Test
     public void testFulfilled() throws Throwable {
 
-        this.r.forEach(this.c);
+        this.r.on(Throwable.class, this.c);
 
         this.outer.succeed(this.value);
 
         verify(this.rf, never()).apply(any());
 
-        /*
-         * fulfillment of the original is signaled with an empty fulfillment of
-         * the recoverX promise.
-         */
-        verify(this.c).accept(Optional.empty());
+        verify(this.c).accept(any(CancellationException.class));
 
     }
 

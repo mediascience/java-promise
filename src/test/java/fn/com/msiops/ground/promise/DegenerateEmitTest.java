@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 import org.junit.Before;
@@ -31,7 +32,9 @@ public class DegenerateEmitTest {
 
     private Consumer<Object> c;
 
-    private Promise<Integer> pfulfilled, pbroken;
+    private Promise<Integer> pfulfilled, pbroken, pcanceled;
+
+    private Runnable r;
 
     private Integer value;
 
@@ -48,13 +51,15 @@ public class DegenerateEmitTest {
         this.value = 12;
         this.pfulfilled = Promises.fulfilled(this.value);
         this.pbroken = Promises.broken(this.x);
+        this.pcanceled = Promises.canceled();
 
         this.c = tc;
+        this.r = mock(Runnable.class);
 
     }
 
     @Test
-    public void testBokenDoesNotEmitValue() throws Throwable {
+    public void testBrokenDoesNotEmitValue() throws Throwable {
 
         this.pbroken.forEach(this.c);
 
@@ -165,6 +170,133 @@ public class DegenerateEmitTest {
     }
 
     @Test
+    public void testBrokenOnCanceled() {
+
+        this.pbroken.onCanceled(this.r);
+        verify(this.r, never()).run();
+
+    }
+
+    @Test
+    public void testCanceledDoesNotEmitValue() throws Throwable {
+
+        this.pcanceled.forEach(this.c);
+
+        verify(this.c, never()).accept(any());
+
+    }
+
+    @Test
+    public void testCanceledEmit() throws Throwable {
+
+        this.pcanceled.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledEmitMultiple() throws Throwable {
+
+        this.pcanceled.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        this.pcanceled.emit(e -> {
+            e.swap().forEach(v -> {
+                try {
+                    this.c.accept(v);
+                } catch (final Throwable t) {
+                    throw new AssertionError("should not happen", t);
+                }
+            });
+        });
+
+        verify(this.c, times(2)).accept(any(CancellationException.class));
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCanceledEmitNullconsumerIllegal() {
+
+        this.pcanceled.emit(null);
+
+    }
+
+    @Test
+    public void testCanceledHandleError() throws Throwable {
+
+        this.pcanceled.on(Throwable.class, this.c);
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledHandleErrorMultiple() throws Throwable {
+
+        this.pcanceled.on(Throwable.class, this.c);
+        this.pcanceled.on(Throwable.class, this.c);
+
+        verify(this.c, times(2)).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledHandleSelectedError() throws Throwable {
+
+        this.pcanceled.on(CancellationException.class, this.c);
+
+        verify(this.c).accept(any(CancellationException.class));
+
+    }
+
+    @Test
+    public void testCanceledNotHandleNotSelectedError() throws Throwable {
+
+        this.pcanceled.on(NullPointerException.class, this.c);
+
+        verify(this.c, never()).accept(any());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCanceledNullHandlerIllegal() {
+
+        this.pcanceled.on(Throwable.class, null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCanceledNullSelectorIllegal() {
+
+        this.pcanceled.on(null, this.c);
+
+    }
+
+    @Test
+    public void testCanceledOnCanceled() {
+
+        this.pcanceled.onCanceled(this.r);
+        verify(this.r).run();
+
+    }
+
+    @Test
     public void testForEachFnErrorIgnored() {
 
         this.pfulfilled.forEach(v -> {
@@ -256,6 +388,14 @@ public class DegenerateEmitTest {
     public void testFulfilledNullConsumerIllegal() {
 
         this.pfulfilled.forEach(null);
+
+    }
+
+    @Test
+    public void testFulfilledOnCanceled() {
+
+        this.pfulfilled.onCanceled(this.r);
+        verify(this.r, never()).run();
 
     }
 

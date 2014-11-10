@@ -19,7 +19,7 @@ package com.msiops.ground.promise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -322,6 +322,53 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Emit a signal if this promise is canceled. If the promise is canceled
+     * when this is invoked, the handler is invoked immediately. If this promise
+     * is fulfilled now or in the future, the handler is ignored. If this
+     * promise is incomplete, the handler will be invoked if the promise is
+     * canceled later.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown from the handler is silently ignored.
+     * </p>
+     *
+     *
+     * @param h
+     *            signal handler. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @throws NullPointerException
+     *             if the handler is null and the promise is canceled or
+     *             incomplete.
+     */
+    public void onCanceled(final Runnable h) {
+
+        Objects.requireNonNull(h);
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                if (x instanceof CancellationException) {
+                    try {
+                        h.run();
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
+                }
+            }
+        };
+
+        dispatch(link);
+    }
+
+    /**
+     * <p>
      * Recover from failure. Produces a promise tied to this promise's failure.
      * </p>
      *
@@ -344,13 +391,13 @@ public final class Promise<T> {
      *
      * @return new promise to recover from failure.
      */
-    public <R, X extends Throwable> Promise<Optional<R>> recover(
-            final Class<X> sel, final FunT1<? super X, Promise<R>> h) {
+    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
+            final FunT1<? super X, Promise<R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
 
-        final Promise<Optional<R>> rval = new Promise<>();
+        final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -368,10 +415,10 @@ public final class Promise<T> {
                         rval.fail(t);
                         return;
                     }
-                    upstream.forEach(v -> rval.succeed(Optional.<R> of(v)));
+                    upstream.forEach(v -> rval.succeed(v));
                     upstream.on(Throwable.class, rval::fail);
                 } else {
-                    rval.succeed(Optional.empty());
+                    rval.cancel();
                 }
 
             }
@@ -600,6 +647,8 @@ public final class Promise<T> {
                     }
                     if (pass) {
                         rval.succeed(value);
+                    } else {
+                        rval.cancel();
                     }
                 }
             }
@@ -608,6 +657,12 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+    }
+
+    void cancel() {
+
+        complete(null, new CancellationException());
+
     }
 
     void complete(final Either<? extends T, ? extends Throwable> e) {

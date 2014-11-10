@@ -19,7 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -88,7 +88,7 @@ public class DegenerateRecoverTest {
         this.inner.succeed(this.rvalue);
 
         verify(this.rf, times(1)).apply(any());
-        verify(this.c, times(2)).accept(Optional.of(this.rvalue));
+        verify(this.c, times(2)).accept(this.rvalue);
 
     }
 
@@ -118,7 +118,7 @@ public class DegenerateRecoverTest {
 
         this.inner.succeed(this.rvalue);
 
-        verify(this.c).accept(Optional.of(this.rvalue));
+        verify(this.c).accept(this.rvalue);
 
     }
 
@@ -150,23 +150,15 @@ public class DegenerateRecoverTest {
 
     }
 
-    /*
-     * This is the case for cancellation. Without cancel, there is no way to
-     * observe upstream success from the recovery chain.
-     */
     @Test
     public void testFulfilled() throws Throwable {
 
-        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err))
-                .forEach(this.c);
+        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err)).on(
+                Throwable.class, this.c);
 
         verify(this.rf, never()).apply(any());
 
-        /*
-         * fulfillment of the original is signaled with an empty fulfillment of
-         * the recoverX promise.
-         */
-        verify(this.c).accept(Optional.empty());
+        verify(this.c).accept(any(CancellationException.class));
 
     }
 
