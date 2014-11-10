@@ -187,6 +187,31 @@ assert cap2.get().equals("Finally!");
         }
     },
 
+    FILTER {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final AtomicReference<Object> cap1 = new AtomicReference<>();
+final AtomicReference<Object> cap2 = new AtomicReference<>();
+
+final Async<Integer> async = Promises.async();
+async.promise().when(i -> i == 75).map(String::valueOf)
+        .forEach(cap1::set);
+async.promise().when(i -> i == 100).map(String::valueOf)
+        .forEach(cap2::set);
+
+async.succeed(100);
+
+assert cap1.get() == null;
+assert cap2.get().equals("100");
+
+            // @formatter:on
+
+        }
+    },
+
     LIFT {
         @Override
         public void run() {
