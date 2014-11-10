@@ -181,80 +181,30 @@ public interface Promises {
     public static <T, U> Promise<Pair<T, U>> waitFor(final Promise<T> t,
             final Promise<U> u) {
 
-        /*
-         * The internal inconsistency warnings below are displayed in Eclipse
-         * only. Found Eclipse bug 432110 which may explain them. These warnings
-         * are not emitted by javac. I cannot find any annotation to disable
-         * this warning. --gjw
-         */
-        return t.then(tv -> {
-            return u.then(uv -> {
-                return Promises.fulfilled(Tuple.of(tv, uv));
-            });
-        });
+        return t.then(tv -> u.map(uv -> Tuple.of(tv, uv)));
+
     }
 
     public static <T, U, V> Promise<Triplet<T, U, V>> waitFor(
             final Promise<T> t, final Promise<U> u, final Promise<V> v) {
 
-        /*
-         * The internal inconsistency warnings below are displayed in Eclipse
-         * only. Found Eclipse bug 432110 which may explain them. These warnings
-         * are not emitted by javac. I cannot find any annotation to disable
-         * this warning. --gjw
-         */
-        return t.then(tv -> {
-            return u.then(uv -> {
-                return v.then(vv -> {
-                    return Promises.fulfilled(Tuple.of(tv, uv, vv));
-                });
-            });
-        });
+        return t.then(tv -> u.then(uv -> v.map(vv -> Tuple.of(tv, uv, vv))));
     }
 
     public static <T, U, V, W> Promise<Tuple4<T, U, V, W>> waitFor(
             final Promise<T> t, final Promise<U> u, final Promise<V> v,
             final Promise<W> w) {
 
-        /*
-         * The internal inconsistency warnings below are displayed in Eclipse
-         * only. Found Eclipse bug 432110 which may explain them. These warnings
-         * are not emitted by javac. I cannot find any annotation to disable
-         * this warning. --gjw
-         */
-        return t.then(tv -> {
-            return u.then(uv -> {
-                return v.then(vv -> {
-                    return w.then(wv -> {
-                        return Promises.fulfilled(Tuple.of(tv, uv, vv, wv));
-                    });
-                });
-            });
-        });
+        return t.then(tv -> u.then(uv -> v.then(vv -> w.map(wv -> Tuple.of(tv,
+                uv, vv, wv)))));
     }
 
     public static <T, U, V, W, X> Promise<Tuple5<T, U, V, W, X>> waitFor(
             final Promise<T> t, final Promise<U> u, final Promise<V> v,
             final Promise<W> w, final Promise<X> x) {
 
-        /*
-         * The internal inconsistency warnings below are displayed in Eclipse
-         * only. Found Eclipse bug 432110 which may explain them. These warnings
-         * are not emitted by javac. I cannot find any annotation to disable
-         * this warning. --gjw
-         */
-        return t.then(tv -> {
-            return u.then(uv -> {
-                return v.then(vv -> {
-                    return w.then(wv -> {
-                        return x.then(xv -> {
-                            return Promises.fulfilled(Tuple.of(tv, uv, vv, wv,
-                                    xv));
-                        });
-                    });
-                });
-            });
-        });
-    }
+        return t.then(tv -> u.then(uv -> v.then(vv -> w.then(wv -> x
+                .map(xv -> Tuple.of(tv, uv, vv, wv, xv))))));
 
+    }
 }
