@@ -16,7 +16,7 @@
  */
 package example.com.msiops.ground.promise;
 
-import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -292,7 +292,7 @@ p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(rcap::set);
 
 assert ecap.get() == x;
-assert rcap.get().equals(Optional.of("Recovered!"));
+assert rcap.get().equals("Recovered!");
 
 // recover when promise is fulfilled
 final AtomicInteger vcap = new AtomicInteger();
@@ -301,10 +301,10 @@ final AtomicReference<Object> scap = new AtomicReference<Object>();
 final Promise<Integer> q = Promises.fulfilled(75);
 q.forEach(vcap::set);
 q.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
-    .forEach(scap::set);
+    .on(Throwable.class, scap::set);
 
 assert vcap.get() == 75;
-assert scap.get().equals(Optional.empty());
+assert scap.get() instanceof CancellationException;
 
         // @formatter:on
         }

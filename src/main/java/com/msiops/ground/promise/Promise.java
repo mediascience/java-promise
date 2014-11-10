@@ -19,7 +19,7 @@ package com.msiops.ground.promise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -344,13 +344,13 @@ public final class Promise<T> {
      *
      * @return new promise to recover from failure.
      */
-    public <R, X extends Throwable> Promise<Optional<R>> recover(
-            final Class<X> sel, final FunT1<? super X, Promise<R>> h) {
+    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
+            final FunT1<? super X, Promise<R>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
 
-        final Promise<Optional<R>> rval = new Promise<>();
+        final Promise<R> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -368,10 +368,10 @@ public final class Promise<T> {
                         rval.fail(t);
                         return;
                     }
-                    upstream.forEach(v -> rval.succeed(Optional.<R> of(v)));
+                    upstream.forEach(v -> rval.succeed(v));
                     upstream.on(Throwable.class, rval::fail);
                 } else {
-                    rval.succeed(Optional.empty());
+                    rval.cancel();
                 }
 
             }
@@ -608,6 +608,12 @@ public final class Promise<T> {
         dispatch(link);
 
         return rval;
+    }
+
+    void cancel() {
+
+        complete(null, new CancellationException());
+
     }
 
     void complete(final Either<? extends T, ? extends Throwable> e) {

@@ -63,7 +63,7 @@ public final class Async<T> {
     public void cancel() {
 
         race();
-        fail(new CancellationException());
+        this.p.cancel();
 
     }
 
