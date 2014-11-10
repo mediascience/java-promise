@@ -34,6 +34,8 @@ public class DegenerateEmitTest {
 
     private Promise<Integer> pfulfilled, pbroken, pcanceled;
 
+    private Runnable r;
+
     private Integer value;
 
     private Exception x;
@@ -52,6 +54,7 @@ public class DegenerateEmitTest {
         this.pcanceled = Promises.canceled();
 
         this.c = tc;
+        this.r = mock(Runnable.class);
 
     }
 
@@ -167,6 +170,14 @@ public class DegenerateEmitTest {
     }
 
     @Test
+    public void testBrokenOnCanceled() {
+
+        this.pbroken.onCanceled(this.r);
+        verify(this.r, never()).run();
+
+    }
+
+    @Test
     public void testCanceledDoesNotEmitValue() throws Throwable {
 
         this.pcanceled.forEach(this.c);
@@ -278,6 +289,14 @@ public class DegenerateEmitTest {
     }
 
     @Test
+    public void testCanceledOnCanceled() {
+
+        this.pcanceled.onCanceled(this.r);
+        verify(this.r).run();
+
+    }
+
+    @Test
     public void testForEachFnErrorIgnored() {
 
         this.pfulfilled.forEach(v -> {
@@ -369,6 +388,14 @@ public class DegenerateEmitTest {
     public void testFulfilledNullConsumerIllegal() {
 
         this.pfulfilled.forEach(null);
+
+    }
+
+    @Test
+    public void testFulfilledOnCanceled() {
+
+        this.pfulfilled.onCanceled(this.r);
+        verify(this.r, never()).run();
 
     }
 

@@ -37,6 +37,8 @@ public class AsyncEmitTest {
 
     private Promise<Integer> p;
 
+    private Runnable r;
+
     private Integer value;
 
     private Exception x;
@@ -54,6 +56,7 @@ public class AsyncEmitTest {
         this.p = this.a.promise();
 
         this.c = tc;
+        this.r = mock(Runnable.class);
 
     }
 
@@ -175,6 +178,15 @@ public class AsyncEmitTest {
     }
 
     @Test
+    public void testBrokenOnCanceled() {
+
+        this.a.promise().onCanceled(this.r);
+        this.a.fail(this.x);
+        verify(this.r, never()).run();
+
+    }
+
+    @Test
     public void testCanceledEmit() throws Throwable {
 
         this.p.emit(e -> {
@@ -284,10 +296,28 @@ public class AsyncEmitTest {
     }
 
     @Test(expected = NullPointerException.class)
+    public void testCanceledNullHandlerIllegal() {
+
+        this.a.cancel();
+        this.a.promise().onCanceled(null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
     public void testCanceledNullSelectorIllegal() {
 
         this.a.cancel();
         this.p.on(null, this.c);
+
+    }
+
+    @Test
+    public void testCanceledOnCanceled() {
+
+        this.a.promise().onCanceled(this.r);
+        verify(this.c, never()).accept(any());
+        this.a.cancel();
+        verify(this.r).run();
 
     }
 
@@ -398,10 +428,26 @@ public class AsyncEmitTest {
 
     }
 
+    @Test
+    public void testFulfilledOnCanceled() {
+
+        this.a.promise().onCanceled(this.r);
+        this.a.succeed(this.value);
+        verify(this.r, never()).run();
+
+    }
+
     @Test(expected = NullPointerException.class)
     public void testIncompleteEmitNullconsumerIllegal() {
 
         this.p.emit(null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testIncompleteNullCancelHandlerIllegal() {
+
+        this.a.promise().onCanceled(null);
 
     }
 

@@ -322,6 +322,53 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Emit a signal if this promise is canceled. If the promise is canceled
+     * when this is invoked, the handler is invoked immediately. If this promise
+     * is fulfilled now or in the future, the handler is ignored. If this
+     * promise is incomplete, the handler will be invoked if the promise is
+     * canceled later.
+     * </p>
+     *
+     * <p>
+     * Any {@link Throwable} thrown from the handler is silently ignored.
+     * </p>
+     *
+     *
+     * @param h
+     *            signal handler. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @throws NullPointerException
+     *             if the handler is null and the promise is canceled or
+     *             incomplete.
+     */
+    public void onCanceled(final Runnable h) {
+
+        Objects.requireNonNull(h);
+
+        final Link<T> link = new Link<T>() {
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                if (x instanceof CancellationException) {
+                    try {
+                        h.run();
+                    } catch (final Throwable err) {
+                        /*
+                         * silently ignore error in terminal continuation. See
+                         * issue #9.
+                         */
+                    }
+                }
+            }
+        };
+
+        dispatch(link);
+    }
+
+    /**
+     * <p>
      * Recover from failure. Produces a promise tied to this promise's failure.
      * </p>
      *
