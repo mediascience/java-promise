@@ -92,6 +92,17 @@ public interface Promises {
 
     }
 
+    /**
+     * Join a list of promises.
+     * 
+     * @param unjoined
+     *            list of promises to join. May be empty but must not be null.
+     * 
+     * @return promised list of values.
+     * 
+     * @throws NullPointerException
+     *             if argument is null.
+     */
     public static <T> Promise<List<T>> join(final List<Promise<T>> unjoined) {
 
         final AtomicInteger remaining = new AtomicInteger(unjoined.size());
