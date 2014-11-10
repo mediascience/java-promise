@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.msiops.footing.functional.FunT1;
 import com.msiops.footing.functional.FunT2;
@@ -559,6 +560,54 @@ public final class Promise<T> {
         dispatch(rval);
         return rval;
 
+    }
+
+    /**
+     * Filter the value.
+     *
+     * @param f
+     *            pass predicate. Must not be null although the implementation
+     *            is not required to check for a null value if it can determine
+     *            it will not be invoked.
+     *
+     * @return promise to fulfill with the value only if it passes the
+     *         predicate.
+     *
+     * @throws NullPointerException
+     *             if a null predicate is passed and the promise is fulfilled or
+     *             incomplete.
+     */
+    public Promise<T> when(final Predicate<? super T> f) {
+
+        Objects.requireNonNull(f);
+
+        final Promise<T> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                if (x != null) {
+                    rval.fail(x);
+                } else {
+                    final boolean pass;
+                    try {
+                        pass = f.test(value);
+                    } catch (final Throwable t) {
+                        rval.fail(t);
+                        return;
+                    }
+                    if (pass) {
+                        rval.succeed(value);
+                    }
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
     }
 
     void complete(final Either<? extends T, ? extends Throwable> e) {

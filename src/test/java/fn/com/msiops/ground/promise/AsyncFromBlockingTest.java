@@ -77,7 +77,7 @@ public class AsyncFromBlockingTest {
 
         final Promise<Integer> p = Promises.broken(this.x);
 
-        final Runnable task = this.async.when(p.toBlocking());
+        final Runnable task = this.async.watch(p.toBlocking());
 
         this.exec.execute(task);
 
@@ -112,7 +112,7 @@ public class AsyncFromBlockingTest {
 
         final Promise<Integer> p = Promises.fulfilled(this.value);
 
-        final Runnable task = this.async.when(p.toBlocking());
+        final Runnable task = this.async.watch(p.toBlocking());
 
         this.exec.execute(task);
 
@@ -162,7 +162,7 @@ public class AsyncFromBlockingTest {
         this.async.promise().on(Throwable.class, this::setResult);
 
         final Async<Integer> src = Promises.async();
-        final Runnable task = this.async.when(src.promise().toBlocking());
+        final Runnable task = this.async.watch(src.promise().toBlocking());
 
         this.exec.execute(task);
 
@@ -207,7 +207,7 @@ public class AsyncFromBlockingTest {
         this.async.promise().forEach(this::setResult);
 
         final Async<Integer> src = Promises.async();
-        final Runnable task = this.async.when(src.promise().toBlocking());
+        final Runnable task = this.async.watch(src.promise().toBlocking());
 
         this.exec.execute(task);
 

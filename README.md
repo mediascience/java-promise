@@ -186,6 +186,27 @@ pendingRetry.get().succeed(true);
 assert vcap.get().equals("Done!");
 ```
 
+### Filter
+
+The ```when(..)``` method binds a predicate. If the predicate for the
+value is true, the value is passed downstream.
+
+```java
+final AtomicReference<Object> cap1 = new AtomicReference<>();
+final AtomicReference<Object> cap2 = new AtomicReference<>();
+
+final Async<Integer> async = Promises.async();
+async.promise().when(i -> i == 75).map(String::valueOf)
+        .forEach(cap1::set);
+async.promise().when(i -> i == 100).map(String::valueOf)
+        .forEach(cap2::set);
+
+async.succeed(100);
+
+assert cap1.get() == null;
+assert cap2.get().equals("100");
+```
+
 
 ### Defer
 
@@ -297,7 +318,7 @@ dest.promise().forEach(v -> {
     cap.set(v);
     done.countDown();
 });
-final Runnable task = dest.when(fv);
+final Runnable task = dest.watch(fv);
 exec.execute(task); // or just task.run() to block this thread
 
 src.succeed(75);
