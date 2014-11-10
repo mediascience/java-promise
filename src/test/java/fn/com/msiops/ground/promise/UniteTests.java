@@ -27,16 +27,16 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
-public class WaitForTest {
+public class UniteTests {
 
     @Test
-    public void testWaitFor2AsyncFulfilled() {
+    public void testUnite2AsyncFulfilled() {
 
         final Async<Integer> a1 = Promises.async();
         final Async<Integer> a2 = Promises.async();
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(a1.promise(), a2.promise()).forEach(actual::set);
+        Promises.unite(a1.promise(), a2.promise()).forEach(actual::set);
 
         a2.succeed(2);
         assertNull(actual.get());
@@ -46,7 +46,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor2AsyncMultipleBroken() {
+    public void testUnite2AsyncMultipleBroken() {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
 
@@ -54,7 +54,7 @@ public class WaitForTest {
         final Async<Integer> a1 = Promises.async();
         final Async<Integer> a2 = Promises.async();
 
-        Promises.waitFor(a1.promise(), a2.promise()).on(Throwable.class,
+        Promises.unite(a1.promise(), a2.promise()).on(Throwable.class,
                 actual::set);
 
         /*
@@ -79,14 +79,14 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor2AsyncSingleBroken() {
+    public void testUnite2AsyncSingleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.fulfilled(1);
         final Async<Integer> a2 = Promises.async();
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, a2.promise()).on(Throwable.class, actual::set);
+        Promises.unite(p1, a2.promise()).on(Throwable.class, actual::set);
 
         assertNull(actual.get());
 
@@ -97,26 +97,26 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor2DegenerateFulfilled() {
+    public void testUnite2DegenerateFulfilled() {
 
         final Promise<Integer> p1 = Promises.fulfilled(1);
         final Promise<Integer> p2 = Promises.fulfilled(2);
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2).forEach(actual::set);
+        Promises.unite(p1, p2).forEach(actual::set);
 
         assertEquals(Tuple.of(1, 2), actual.get());
     }
 
     @Test
-    public void testWaitFor2DegenerateMultipleBroken() {
+    public void testUnite2DegenerateMultipleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.broken(x);
         final Promise<Integer> p2 = Promises.broken(new Exception());
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2).on(Throwable.class, actual::set);
+        Promises.unite(p1, p2).on(Throwable.class, actual::set);
 
         // leftmost prevails
         assertEquals(x, actual.get());
@@ -124,14 +124,14 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor3AsyncFulfilled() {
+    public void testUnite3AsyncFulfilled() {
 
         final Async<Integer> a1 = Promises.async();
         final Async<Integer> a2 = Promises.async();
         final Async<String> a3 = Promises.async();
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise()).forEach(
+        Promises.unite(a1.promise(), a2.promise(), a3.promise()).forEach(
                 actual::set);
 
         a3.succeed("3");
@@ -145,7 +145,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor3AsyncMultipleBroken() {
+    public void testUnite3AsyncMultipleBroken() {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
 
@@ -154,7 +154,7 @@ public class WaitForTest {
         final Async<Integer> a2 = Promises.async();
         final Async<String> a3 = Promises.async();
 
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise()).on(
+        Promises.unite(a1.promise(), a2.promise(), a3.promise()).on(
                 Throwable.class, actual::set);
 
         /*
@@ -180,7 +180,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor3AsyncSingleBroken() {
+    public void testUnite3AsyncSingleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.fulfilled(1);
@@ -188,7 +188,7 @@ public class WaitForTest {
         final Promise<String> p3 = Promises.fulfilled("3");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, a2.promise(), p3).on(Throwable.class, actual::set);
+        Promises.unite(p1, a2.promise(), p3).on(Throwable.class, actual::set);
 
         assertNull(actual.get());
 
@@ -199,20 +199,20 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor3DegenerateFulfilled() {
+    public void testUnite3DegenerateFulfilled() {
 
         final Promise<Integer> p1 = Promises.fulfilled(1);
         final Promise<Integer> p2 = Promises.fulfilled(2);
         final Promise<String> p3 = Promises.fulfilled("3");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3).forEach(actual::set);
+        Promises.unite(p1, p2, p3).forEach(actual::set);
 
         assertEquals(Tuple.of(1, 2, "3"), actual.get());
     }
 
     @Test
-    public void testWaitFor3DegenerateMultipleBroken() {
+    public void testUnite3DegenerateMultipleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.broken(x);
@@ -220,14 +220,14 @@ public class WaitForTest {
         final Promise<String> p3 = Promises.fulfilled("3");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3).on(Throwable.class, actual::set);
+        Promises.unite(p1, p2, p3).on(Throwable.class, actual::set);
 
         assertEquals(x, actual.get());
 
     }
 
     @Test
-    public void testWaitFor4AsyncFulfilled() {
+    public void testUnite4AsyncFulfilled() {
 
         final Async<Integer> a1 = Promises.async();
         final Async<Integer> a2 = Promises.async();
@@ -235,7 +235,7 @@ public class WaitForTest {
         final Async<String> a4 = Promises.async();
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise(), a4.promise())
+        Promises.unite(a1.promise(), a2.promise(), a3.promise(), a4.promise())
                 .forEach(actual::set);
 
         a4.succeed("4");
@@ -252,7 +252,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor4AsyncMultipleBroken() {
+    public void testUnite4AsyncMultipleBroken() {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
 
@@ -262,7 +262,7 @@ public class WaitForTest {
         final Async<String> a3 = Promises.async();
         final Async<String> a4 = Promises.async();
 
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise(), a4.promise())
+        Promises.unite(a1.promise(), a2.promise(), a3.promise(), a4.promise())
                 .on(Throwable.class, actual::set);
 
         /*
@@ -288,7 +288,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor4AsyncSingleBroken() {
+    public void testUnite4AsyncSingleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.fulfilled(1);
@@ -297,7 +297,7 @@ public class WaitForTest {
         final Promise<String> p4 = Promises.fulfilled("4");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, a2.promise(), p3, p4).on(Throwable.class,
+        Promises.unite(p1, a2.promise(), p3, p4).on(Throwable.class,
                 actual::set);
 
         assertNull(actual.get());
@@ -309,7 +309,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor4DegenerateFulfilled() {
+    public void testUnite4DegenerateFulfilled() {
 
         final Promise<Integer> p1 = Promises.fulfilled(1);
         final Promise<Integer> p2 = Promises.fulfilled(2);
@@ -317,13 +317,13 @@ public class WaitForTest {
         final Promise<String> p4 = Promises.fulfilled("4");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3, p4).forEach(actual::set);
+        Promises.unite(p1, p2, p3, p4).forEach(actual::set);
 
         assertEquals(Tuple.of(1, 2, "3", "4"), actual.get());
     }
 
     @Test
-    public void testWaitFor4DegenerateMultipleBroken() {
+    public void testUnite4DegenerateMultipleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.broken(x);
@@ -332,7 +332,7 @@ public class WaitForTest {
         final Promise<String> p4 = Promises.fulfilled("4");
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3, p4).on(Throwable.class, actual::set);
+        Promises.unite(p1, p2, p3, p4).on(Throwable.class, actual::set);
 
         /*
          * leftmost broken promise prevails
@@ -342,7 +342,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor5AsyncFulfilled() {
+    public void testUnite5AsyncFulfilled() {
 
         final Async<Integer> a1 = Promises.async();
         final Async<Integer> a2 = Promises.async();
@@ -351,8 +351,8 @@ public class WaitForTest {
         final Async<Integer> a5 = Promises.async();
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise(),
-                a4.promise(), a5.promise()).forEach(actual::set);
+        Promises.unite(a1.promise(), a2.promise(), a3.promise(), a4.promise(),
+                a5.promise()).forEach(actual::set);
 
         a5.succeed(5);
         assertNull(actual.get());
@@ -371,7 +371,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor5AsyncMultipleBroken() {
+    public void testUnite5AsyncMultipleBroken() {
 
         final AtomicReference<Object> actual = new AtomicReference<>();
 
@@ -382,8 +382,8 @@ public class WaitForTest {
         final Async<String> a4 = Promises.async();
         final Async<Integer> a5 = Promises.async();
 
-        Promises.waitFor(a1.promise(), a2.promise(), a3.promise(),
-                a4.promise(), a5.promise()).on(Throwable.class, actual::set);
+        Promises.unite(a1.promise(), a2.promise(), a3.promise(), a4.promise(),
+                a5.promise()).on(Throwable.class, actual::set);
 
         /*
          * the leftmost promise to break becomes the error in the resulting
@@ -408,7 +408,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor5AsyncSingleBroken() {
+    public void testUnite5AsyncSingleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.fulfilled(1);
@@ -418,7 +418,7 @@ public class WaitForTest {
         final Promise<Integer> p5 = Promises.fulfilled(5);
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, a2.promise(), p3, p4, p5).on(Throwable.class,
+        Promises.unite(p1, a2.promise(), p3, p4, p5).on(Throwable.class,
                 actual::set);
 
         assertNull(actual.get());
@@ -430,7 +430,7 @@ public class WaitForTest {
     }
 
     @Test
-    public void testWaitFor5DegenerateFulfilled() {
+    public void testUnite5DegenerateFulfilled() {
 
         final Promise<Integer> p1 = Promises.fulfilled(1);
         final Promise<Integer> p2 = Promises.fulfilled(2);
@@ -439,13 +439,13 @@ public class WaitForTest {
         final Promise<Integer> p5 = Promises.fulfilled(5);
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3, p4, p5).forEach(actual::set);
+        Promises.unite(p1, p2, p3, p4, p5).forEach(actual::set);
 
         assertEquals(Tuple.of(1, 2, "3", "4", 5), actual.get());
     }
 
     @Test
-    public void testWaitFor5DegenerateMultipleBroken() {
+    public void testUnite5DegenerateMultipleBroken() {
 
         final Exception x = new RuntimeException();
         final Promise<Integer> p1 = Promises.broken(x);
@@ -455,7 +455,7 @@ public class WaitForTest {
         final Promise<Integer> p5 = Promises.fulfilled(5);
 
         final AtomicReference<Object> actual = new AtomicReference<>();
-        Promises.waitFor(p1, p2, p3, p4, p5).on(Throwable.class, actual::set);
+        Promises.unite(p1, p2, p3, p4, p5).on(Throwable.class, actual::set);
 
         /*
          * leftmost broken promise prevails

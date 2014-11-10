@@ -178,20 +178,20 @@ public interface Promises {
 
     }
 
-    public static <T, U> Promise<Pair<T, U>> waitFor(final Promise<T> t,
+    public static <T, U> Promise<Pair<T, U>> unite(final Promise<T> t,
             final Promise<U> u) {
 
         return t.then(tv -> u.map(uv -> Tuple.of(tv, uv)));
 
     }
 
-    public static <T, U, V> Promise<Triplet<T, U, V>> waitFor(
-            final Promise<T> t, final Promise<U> u, final Promise<V> v) {
+    public static <T, U, V> Promise<Triplet<T, U, V>> unite(final Promise<T> t,
+            final Promise<U> u, final Promise<V> v) {
 
         return t.then(tv -> u.then(uv -> v.map(vv -> Tuple.of(tv, uv, vv))));
     }
 
-    public static <T, U, V, W> Promise<Tuple4<T, U, V, W>> waitFor(
+    public static <T, U, V, W> Promise<Tuple4<T, U, V, W>> unite(
             final Promise<T> t, final Promise<U> u, final Promise<V> v,
             final Promise<W> w) {
 
@@ -199,7 +199,7 @@ public interface Promises {
                 uv, vv, wv)))));
     }
 
-    public static <T, U, V, W, X> Promise<Tuple5<T, U, V, W, X>> waitFor(
+    public static <T, U, V, W, X> Promise<Tuple5<T, U, V, W, X>> unite(
             final Promise<T> t, final Promise<U> u, final Promise<V> v,
             final Promise<W> w, final Promise<X> x) {
 
