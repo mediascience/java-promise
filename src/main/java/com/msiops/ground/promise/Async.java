@@ -138,6 +138,11 @@ public final class Async<T> {
                     Async.this.p.fail(e);
                 } catch (final ExecutionException e) {
                     Async.this.p.fail(e.getCause());
+                } catch (final Throwable t) {
+                    /*
+                     * this handles cancellation.
+                     */
+                    Async.this.p.fail(t);
                 }
 
             }

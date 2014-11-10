@@ -18,10 +18,12 @@ package fn.com.msiops.ground.promise;
 
 import static org.junit.Assert.*;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -68,6 +70,25 @@ public class AsyncToBlockingTest {
     public void teardown() {
 
         this.exec.shutdown();
+
+    }
+
+    @Test
+    public void testArbitraryBrokenIsDone() {
+
+        final Future<Object> fv = Promises.broken(new RuntimeException())
+                .toBlocking();
+
+        assertTrue(fv.isDone());
+    }
+
+    @Test
+    public void testArbitraryBrokenNotCanceled() {
+
+        final Future<Object> fv = Promises.broken(new RuntimeException())
+                .toBlocking();
+
+        assertFalse(fv.isCancelled());
 
     }
 
@@ -131,6 +152,31 @@ public class AsyncToBlockingTest {
     }
 
     @Test
+    public void testCanceledIsDone() {
+
+        final Future<Object> fv = Promises.canceled().toBlocking();
+
+        assertTrue(fv.isDone());
+    }
+
+    @Test
+    public void testCancellation() throws InterruptedException,
+            ExecutionException {
+
+        final Future<Object> fv = Promises.canceled().toBlocking();
+
+        assertTrue(fv.isCancelled());
+
+        try {
+            fv.get();
+            fail("should throw");
+        } catch (final CancellationException cx) {
+            // OK
+        }
+
+    }
+
+    @Test
     public void testFulfilledWaitForever() throws InterruptedException,
             ExecutionException {
 
@@ -188,6 +234,40 @@ public class AsyncToBlockingTest {
         done.await();
 
         assertEquals(this.value, this.result.get());
+
+    }
+
+    @Test
+    public void testIncompleteIsNotDone() {
+
+        final Future<Object> fv = Promises.async().promise().toBlocking();
+
+        assertFalse(fv.isDone());
+    }
+
+    @Test
+    public void testIncompleteNotCancelled() {
+
+        final Future<Object> fv = Promises.async().promise().toBlocking();
+
+        assertFalse(fv.isCancelled());
+    }
+
+    @Test
+    public void testNotFulfilledIsDone() {
+
+        final Future<Object> fv = Promises.<Object> fulfilled(12).toBlocking();
+
+        assertTrue(fv.isDone());
+
+    }
+
+    @Test
+    public void testNotFulfilledNotCanceled() {
+
+        final Future<Object> fv = Promises.<Object> fulfilled(12).toBlocking();
+
+        assertFalse(fv.isCancelled());
 
     }
 
