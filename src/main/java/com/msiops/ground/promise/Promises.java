@@ -18,6 +18,7 @@ package com.msiops.ground.promise;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -52,6 +53,14 @@ public interface Promises {
 
         final Promise<R> rval = new Promise<>();
         rval.fail(x);
+        return rval;
+
+    }
+
+    public static <R> Promise<R> canceled() {
+
+        final Promise<R> rval = new Promise<>();
+        rval.fail(new CancellationException());
         return rval;
 
     }
