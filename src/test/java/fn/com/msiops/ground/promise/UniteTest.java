@@ -27,7 +27,7 @@ import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
 import com.msiops.ground.promise.Promises;
 
-public class UniteTests {
+public class UniteTest {
 
     @Test
     public void testUnite2AsyncFulfilled() {
