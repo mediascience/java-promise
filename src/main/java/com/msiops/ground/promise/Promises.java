@@ -18,14 +18,18 @@ package com.msiops.ground.promise;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import com.msiops.footing.functional.FunT1;
+import com.msiops.footing.tuple.Pair;
+import com.msiops.footing.tuple.Triplet;
+import com.msiops.footing.tuple.Tuple;
+import com.msiops.footing.tuple.Tuple4;
+import com.msiops.footing.tuple.Tuple5;
 import com.msiops.ground.either.Either;
 
 public interface Promises {
@@ -175,31 +179,172 @@ public interface Promises {
 
     }
 
-    public static <R> Promise<R> waitFor(final Promise<R> p,
-            final Promise<?>... others) {
+    /**
+     * Unite promises into a single promise.
+     *
+     * @param t
+     *            first promise. Must not be null.
+     *
+     * @param u
+     *            second promise. Must not be null.
+     *
+     * @param <T>
+     *            first promise value type.
+     *
+     * @param <U>
+     *            second promise value type.
+     *
+     * @return promise to produce a tuple corresponding to the argument value
+     *         types.
+     *
+     * @throws NullPointerException
+     *             if any argument is null.
+     *
+     */
+    public static <T, U> Promise<Pair<T, U>> unite(final Promise<T> t,
+            final Promise<U> u) {
 
-        final AtomicInteger remaining = new AtomicInteger(1 + others.length);
-        final AtomicReference<Either<R, Throwable>> result = new AtomicReference<>();
+        Objects.requireNonNull(u);
 
-        final Async<R> control = Promises.async();
-        final Consumer<Object> dec = v -> {
-            final int rm = remaining.decrementAndGet();
-            if (rm == 0) {
-                control.complete(result.get());
-            }
-        };
+        return t.then(tv -> u.map(uv -> Tuple.of(tv, uv)));
 
-        p.emit(r -> {
-            r.forEach(v -> result.set(Either.left(v)));
-            r.swap().forEach(x -> result.set(Either.right(x)));
-            dec.accept(r);
-        });
+    }
 
-        for (final Promise<?> o : others) {
-            o.emit(dec::accept);
-        }
+    /**
+     * Unite promises into a single promise.
+     *
+     * @param t
+     *            first promise. Must not be null.
+     *
+     * @param u
+     *            second promise. Must not be null.
+     *
+     * @param v
+     *            third promise. Must not be null.
+     *
+     * @param <T>
+     *            first promise value type.
+     *
+     * @param <U>
+     *            second promise value type.
+     *
+     * @param <V>
+     *            third promise value type.
+     *
+     * @return promise to produce a tuple corresponding to the argument value
+     *         types.
+     *
+     * @throws NullPointerException
+     *             if any argument is null.
+     *
+     */
+    public static <T, U, V> Promise<Triplet<T, U, V>> unite(final Promise<T> t,
+            final Promise<U> u, final Promise<V> v) {
 
-        return control.promise();
+        Objects.requireNonNull(u);
+        Objects.requireNonNull(v);
+
+        return t.then(tv -> u.then(uv -> v.map(vv -> Tuple.of(tv, uv, vv))));
+    }
+
+    /**
+     * Unite promises into a single promise.
+     *
+     * @param t
+     *            first promise. Must not be null.
+     *
+     * @param u
+     *            second promise. Must not be null.
+     *
+     * @param v
+     *            third promise. Must not be null.
+     *
+     * @param w
+     *            fourth promise. Must not be null.
+     *
+     * @param <T>
+     *            first promise value type.
+     *
+     * @param <U>
+     *            second promise value type.
+     *
+     * @param <V>
+     *            third promise value type.
+     *
+     * @param <W>
+     *            fourth promise value type.
+     *
+     *
+     * @return promise to produce a tuple corresponding to the argument value
+     *         types.
+     *
+     * @throws NullPointerException
+     *             if any argument is null.
+     *
+     */
+    public static <T, U, V, W> Promise<Tuple4<T, U, V, W>> unite(
+            final Promise<T> t, final Promise<U> u, final Promise<V> v,
+            final Promise<W> w) {
+
+        Objects.requireNonNull(u);
+        Objects.requireNonNull(v);
+        Objects.requireNonNull(w);
+
+        return t.then(tv -> u.then(uv -> v.then(vv -> w.map(wv -> Tuple.of(tv,
+                uv, vv, wv)))));
+    }
+
+    /**
+     * Unite promises into a single promise.
+     *
+     * @param t
+     *            first promise. Must not be null.
+     *
+     * @param u
+     *            second promise. Must not be null.
+     *
+     * @param v
+     *            third promise. Must not be null.
+     *
+     * @param w
+     *            fourth promise. Must not be null.
+     *
+     * @param x
+     *            fifth promise. Must not be null.
+     *
+     * @param <T>
+     *            first promise value type.
+     *
+     * @param <U>
+     *            second promise value type.
+     *
+     * @param <V>
+     *            third promise value type.
+     *
+     * @param <W>
+     *            fourth promise value type.
+     *
+     * @param <X>
+     *            fifth promise value type.
+     *
+     * @return promise to produce a tuple corresponding to the argument value
+     *         types.
+     *
+     * @throws NullPointerException
+     *             if any argument is null.
+     *
+     */
+    public static <T, U, V, W, X> Promise<Tuple5<T, U, V, W, X>> unite(
+            final Promise<T> t, final Promise<U> u, final Promise<V> v,
+            final Promise<W> w, final Promise<X> x) {
+
+        Objects.requireNonNull(u);
+        Objects.requireNonNull(v);
+        Objects.requireNonNull(w);
+        Objects.requireNonNull(x);
+
+        return t.then(tv -> u.then(uv -> v.then(vv -> w.then(wv -> x
+                .map(xv -> Tuple.of(tv, uv, vv, wv, xv))))));
 
     }
 }

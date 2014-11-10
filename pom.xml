@@ -21,6 +21,10 @@
     </dependency>
     <dependency>
       <groupId>com.msiops.footing</groupId>
+      <artifactId>footing-tuple</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.msiops.footing</groupId>
       <artifactId>footing-functional</artifactId>
     </dependency>
     <dependency>
@@ -40,6 +44,11 @@
         <groupId>com.msiops.ground</groupId>
         <artifactId>ground-either</artifactId>
         <version>0.11</version>
+      </dependency>
+      <dependency>
+        <groupId>com.msiops.footing</groupId>
+        <artifactId>footing-tuple</artifactId>
+        <version>0.2</version>
       </dependency>
       <dependency>
         <groupId>com.msiops.footing</groupId>
