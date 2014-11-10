@@ -108,7 +108,7 @@ public final class Async<T> {
         this.p.succeed(value);
     }
 
-    public Runnable when(final Future<? extends T> fv) {
+    public Runnable watch(final Future<? extends T> fv) {
 
         race();
         return new Runnable() {

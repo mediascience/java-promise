@@ -56,7 +56,7 @@ dest.promise().forEach(v -> {
     cap.set(v);
     done.countDown();
 });
-final Runnable task = dest.when(fv);
+final Runnable task = dest.watch(fv);
 exec.execute(task); // or just task.run() to block this thread
 
 src.succeed(75);
