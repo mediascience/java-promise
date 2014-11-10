@@ -19,6 +19,7 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -84,10 +85,11 @@ public class DegenerateWhenTest {
 
         this.fulfilled.when(this.ptrue).forEach(this.cval::accept);
         this.fulfilled.when(this.ptrue).forEach(this.cval::accept);
-        this.fulfilled.when(this.pfalse).forEach(this.cval::accept);
-        this.fulfilled.when(this.pfalse).forEach(this.cval::accept);
+        this.fulfilled.when(this.pfalse).on(Throwable.class, this.cx::accept);
+        this.fulfilled.when(this.pfalse).on(Throwable.class, this.cx::accept);
 
         verify(this.cval, times(2)).accept(this.value);
+        verify(this.cx, times(2)).accept(any(CancellationException.class));
     }
 
     @Test
@@ -124,7 +126,7 @@ public class DegenerateWhenTest {
         p.on(Throwable.class, this.cx::accept);
 
         verify(this.cval, never()).accept(any());
-        verify(this.cx, never()).accept(any());
+        verify(this.cx).accept(any(CancellationException.class));
 
     }
 

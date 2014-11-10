@@ -600,6 +600,8 @@ public final class Promise<T> {
                     }
                     if (pass) {
                         rval.succeed(value);
+                    } else {
+                        rval.cancel();
                     }
                 }
             }
