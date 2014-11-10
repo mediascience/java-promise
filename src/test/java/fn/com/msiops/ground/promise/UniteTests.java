@@ -123,6 +123,24 @@ public class UniteTests {
 
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testUnite2NullFirst() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(null, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite2NullSecond() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, null);
+
+    }
+
     @Test
     public void testUnite3AsyncFulfilled() {
 
@@ -223,6 +241,33 @@ public class UniteTests {
         Promises.unite(p1, p2, p3).on(Throwable.class, actual::set);
 
         assertEquals(x, actual.get());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite3NullFirst() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(null, p, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite3NullSecond() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, null, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite3NullThird() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, null);
 
     }
 
@@ -338,6 +383,42 @@ public class UniteTests {
          * leftmost broken promise prevails
          */
         assertEquals(x, actual.get());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite4NullFirst() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(null, p, p, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite4NullFourth() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, p, null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite4NullSecond() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, null, p, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite4NullThird() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, null, p);
 
     }
 
@@ -461,6 +542,51 @@ public class UniteTests {
          * leftmost broken promise prevails
          */
         assertEquals(x, actual.get());
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite5NullFifth() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, p, p, null);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite5NullFirst() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(null, p, p, p, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite5NullFourth() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, p, null, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite5NullSecond() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, null, p, p, p);
+
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testUnite5NullThird() {
+
+        final Promise<?> p = Promises.canceled();
+
+        Promises.unite(p, p, null, p, p);
 
     }
 
