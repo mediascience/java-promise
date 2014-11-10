@@ -20,12 +20,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import com.msiops.footing.functional.FunT1;
+import com.msiops.footing.tuple.Pair;
+import com.msiops.footing.tuple.Triplet;
+import com.msiops.footing.tuple.Tuple;
+import com.msiops.footing.tuple.Tuple4;
+import com.msiops.footing.tuple.Tuple5;
 import com.msiops.ground.either.Either;
 
 public interface Promises {
@@ -175,31 +178,83 @@ public interface Promises {
 
     }
 
-    public static <R> Promise<R> waitFor(final Promise<R> p,
-            final Promise<?>... others) {
+    public static <T, U> Promise<Pair<T, U>> waitFor(final Promise<T> t,
+            final Promise<U> u) {
 
-        final AtomicInteger remaining = new AtomicInteger(1 + others.length);
-        final AtomicReference<Either<R, Throwable>> result = new AtomicReference<>();
-
-        final Async<R> control = Promises.async();
-        final Consumer<Object> dec = v -> {
-            final int rm = remaining.decrementAndGet();
-            if (rm == 0) {
-                control.complete(result.get());
-            }
-        };
-
-        p.emit(r -> {
-            r.forEach(v -> result.set(Either.left(v)));
-            r.swap().forEach(x -> result.set(Either.right(x)));
-            dec.accept(r);
+        /*
+         * The internal inconsistency warnings below are displayed in Eclipse
+         * only. Found Eclipse bug 432110 which may explain them. These warnings
+         * are not emitted by javac. I cannot find any annotation to disable
+         * this warning. --gjw
+         */
+        return t.then(tv -> {
+            return u.then(uv -> {
+                return Promises.fulfilled(Tuple.of(tv, uv));
+            });
         });
-
-        for (final Promise<?> o : others) {
-            o.emit(dec::accept);
-        }
-
-        return control.promise();
-
     }
+
+    public static <T, U, V> Promise<Triplet<T, U, V>> waitFor(
+            final Promise<T> t, final Promise<U> u, final Promise<V> v) {
+
+        /*
+         * The internal inconsistency warnings below are displayed in Eclipse
+         * only. Found Eclipse bug 432110 which may explain them. These warnings
+         * are not emitted by javac. I cannot find any annotation to disable
+         * this warning. --gjw
+         */
+        return t.then(tv -> {
+            return u.then(uv -> {
+                return v.then(vv -> {
+                    return Promises.fulfilled(Tuple.of(tv, uv, vv));
+                });
+            });
+        });
+    }
+
+    public static <T, U, V, W> Promise<Tuple4<T, U, V, W>> waitFor(
+            final Promise<T> t, final Promise<U> u, final Promise<V> v,
+            final Promise<W> w) {
+
+        /*
+         * The internal inconsistency warnings below are displayed in Eclipse
+         * only. Found Eclipse bug 432110 which may explain them. These warnings
+         * are not emitted by javac. I cannot find any annotation to disable
+         * this warning. --gjw
+         */
+        return t.then(tv -> {
+            return u.then(uv -> {
+                return v.then(vv -> {
+                    return w.then(wv -> {
+                        return Promises.fulfilled(Tuple.of(tv, uv, vv, wv));
+                    });
+                });
+            });
+        });
+    }
+
+    public static <T, U, V, W, X> Promise<Tuple5<T, U, V, W, X>> waitFor(
+            final Promise<T> t, final Promise<U> u, final Promise<V> v,
+            final Promise<W> w, final Promise<X> x) {
+
+        /*
+         * The internal inconsistency warnings below are displayed in Eclipse
+         * only. Found Eclipse bug 432110 which may explain them. These warnings
+         * are not emitted by javac. I cannot find any annotation to disable
+         * this warning. --gjw
+         */
+        return t.then(tv -> {
+            return u.then(uv -> {
+                return v.then(vv -> {
+                    return w.then(wv -> {
+                        return x.then(xv -> {
+                            return Promises.fulfilled(Tuple.of(tv, uv, vv, wv,
+                                    xv));
+                        });
+                    });
+                });
+            });
+        });
+    }
+
 }
