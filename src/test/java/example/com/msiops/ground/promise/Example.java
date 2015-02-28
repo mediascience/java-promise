@@ -271,6 +271,32 @@ assert ecap.get() == x;
         };
     },
 
+    MAP_ERROR {
+        @Override
+        public void run() {
+
+            // @formatter:off
+
+final AtomicReference<Throwable> ecap = new AtomicReference<>();
+final AtomicInteger vcap = new AtomicInteger();
+
+final Exception origX = new Exception("orig x");
+Promises.broken(origX)
+        .mapError(Exception.class, x -> new RuntimeException(x))
+        .on(Exception.class, ecap::set);
+
+assert ecap.get() instanceof RuntimeException;
+assert ecap.get().getCause() == origX;
+
+Promises.fulfilled(100)
+        .mapError(Exception.class, x -> new RuntimeException(x))
+        .forEach(vcap::set);
+assert vcap.get() == 100;
+
+            // @formatter::on
+        }
+    },
+
     /**
      * Show how to recover from error.
      */
