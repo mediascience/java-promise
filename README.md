@@ -269,6 +269,33 @@ assert vcap.get() == 75;
 assert scap.get() instanceof CancellationException;
 ```
 
+### Map Error
+
+```mapError(..)``` runs a transformation only when the target
+promise is broken. The transformation is applied to the target's
+exception value and the result passed as a downstream exception.
+If the target is fulfilled, the downstream simply receives the
+value.
+
+```java
+final AtomicReference<Throwable> ecap = new AtomicReference<>();
+final AtomicInteger vcap = new AtomicInteger();
+
+final Exception origX = new Exception("orig x");
+Promises.broken(origX)
+        .mapError(Exception.class, x -> new RuntimeException(x))
+        .on(Exception.class, ecap::set);
+
+assert ecap.get() instanceof RuntimeException;
+assert ecap.get().getCause() == origX;
+
+Promises.fulfilled(100)
+        .mapError(Exception.class, x -> new RuntimeException(x))
+        .forEach(vcap::set);
+assert vcap.get() == 100;
+```
+
+
 ### Lift
 
 ```Promises.lift(..)``` converts a funcion that transforms a value into
