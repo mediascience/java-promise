@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.msiops.ground</groupId>
   <artifactId>ground-promise</artifactId>
-  <version>0-SNAPSHOT</version>
+  <version>0.11</version>
   <packaging>jar</packaging>
   <name>GROUND :: Promise</name>
   <description>Heavenly continuation passing</description>
