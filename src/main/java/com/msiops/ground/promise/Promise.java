@@ -263,6 +263,41 @@ public final class Promise<T> {
 
     }
 
+    public <X extends Throwable> Promise<T> mapError(
+            final Class<? extends X> selector,
+            final Function<? super X, ? extends Throwable> xf) {
+
+        Objects.requireNonNull(xf);
+
+        final Promise<T> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+
+            @Override
+            public void next(final T value, final Throwable x) {
+                if (x == null) {
+                    rval.succeed(value);
+                } else if (selector.isInstance(x)) {
+                    final Throwable nx;
+                    try {
+                        nx = xf.apply(selector.cast(x));
+                    } catch (final Throwable bt) {
+                        rval.fail(bt);
+                        return;
+                    }
+                    rval.fail(nx);
+                } else {
+                    rval.fail(x);
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+
+    }
+
     /**
      * <p>
      * Emit the error of this promise. If the promise is broken when this is
