@@ -347,17 +347,17 @@ public class ConcurrencyTest {
         final CountDownLatch start = new CountDownLatch(1);
         final CountDownLatch end = new CountDownLatch(breadsz * 4 + 1);
 
-        final String rval = "HI";
-        final String expected = rval;
+        final Integer rval = 10100;
+        final Integer expected = rval;
         final Async<Integer> a = Promises.async();
         final Promise<Integer> p = a.promise();
 
         final AtomicInteger emitted = new AtomicInteger();
 
-        final Function<Throwable, Promise<String>> h = new Function<Throwable, Promise<String>>() {
+        final Function<Throwable, Promise<Integer>> h = new Function<Throwable, Promise<Integer>>() {
             @Override
-            public Promise<String> apply(final Throwable x) {
-                final Async<String> inner = Promises.async();
+            public Promise<Integer> apply(final Throwable x) {
+                final Async<Integer> inner = Promises.async();
                 exec.execute(new Runnable() {
                     @Override
                     public void run() {

@@ -256,17 +256,17 @@ p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
 assert ecap.get() == x;
 assert rcap.get().equals("Recovered!");
 
-// recover when promise is fulfilled
-final AtomicInteger vcap = new AtomicInteger();
-final AtomicReference<Object> scap = new AtomicReference<Object>();
+// recovery is not performed when promise is fulfilled
+final AtomicReference<Object> vcap = new AtomicReference<>();
+final AtomicReference<Object> scap = new AtomicReference<>();
 
-final Promise<Integer> q = Promises.fulfilled(75);
+final Promise<String> q = Promises.fulfilled("Recovery Not Needed");
 q.forEach(vcap::set);
 q.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
-    .on(Throwable.class, scap::set);
+    .forEach(scap::set);
 
-assert vcap.get() == 75;
-assert scap.get() instanceof CancellationException;
+assert vcap.get().equals("Recovery Not Needed");
+assert scap.get().equals("Recovery Not Needed");
 ```
 
 ### Map Error

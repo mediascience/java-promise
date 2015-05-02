@@ -18,12 +18,13 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.msiops.ground.promise.Async;
 import com.msiops.ground.promise.Promise;
@@ -31,15 +32,17 @@ import com.msiops.ground.promise.Promises;
 
 public class DegenerateRecoverTest {
 
+    @Mock
     private Consumer<Object> c;
 
     private Promise<Integer> fulfilled, broken;
 
-    private Async<Object> inner;
+    private Async<Integer> inner;
 
-    private Function<Exception, Promise<Object>> rf;
+    @Mock
+    private Function<Exception, Promise<Integer>> rf;
 
-    private Object rvalue;
+    private Integer rvalue;
 
     private Integer value;
 
@@ -48,28 +51,21 @@ public class DegenerateRecoverTest {
     @Before
     public void setup() {
 
-        @SuppressWarnings("unchecked")
-        final Function<Exception, Promise<Object>> trf = mock(Function.class);
-
-        @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        MockitoAnnotations.initMocks(this);
 
         this.inner = Promises.async();
 
         this.value = 12;
         this.fulfilled = Promises.fulfilled(this.value);
 
+        this.rvalue = 19039;
+
         this.x = new Exception();
         this.broken = Promises.broken(this.x);
 
-        when(trf.apply(this.x)).thenReturn(this.inner.promise());
-
-        this.rvalue = "Hello";
+        when(this.rf.apply(this.x)).thenReturn(this.inner.promise());
 
         this.ix = new RuntimeException();
-
-        this.rf = trf;
-        this.c = tc;
 
     }
 
@@ -152,12 +148,18 @@ public class DegenerateRecoverTest {
     @Test
     public void testFulfilled() throws Throwable {
 
-        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err)).on(
-                Throwable.class, this.c);
+        this.fulfilled.recover(Exception.class, err -> this.rf.apply(err))
+                .forEach(this.c);
 
+        /*
+         * recovery function is never invoked
+         */
         verify(this.rf, never()).apply(any());
 
-        verify(this.c).accept(any(CancellationException.class));
+        /*
+         * outer fulfilled is passed
+         */
+        verify(this.c).accept(this.value);
 
     }
 
