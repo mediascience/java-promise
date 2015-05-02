@@ -310,7 +310,7 @@ final AtomicReference<Object> ecap = new AtomicReference<>();
 final AtomicReference<Object> rcap = new AtomicReference<>();
 
 final Exception x = new RuntimeException();
-final Promise<?> p = Promises.broken(x);
+final Promise<String> p = Promises.broken(x);
 p.on(Throwable.class, ecap::set);
 p.recover(Exception.class, err -> Promises.fulfilled("Recovered!"))
     .forEach(rcap::set);
