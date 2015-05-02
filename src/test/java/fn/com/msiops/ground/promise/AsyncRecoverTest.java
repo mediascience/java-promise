@@ -18,11 +18,12 @@ package fn.com.msiops.ground.promise;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.msiops.footing.functional.FunT1;
 import com.msiops.ground.promise.Async;
@@ -31,16 +32,19 @@ import com.msiops.ground.promise.Promises;
 
 public class AsyncRecoverTest {
 
+    @Mock
     private Consumer<Object> c;
 
-    private Async<Object> inner;
+    private Async<Integer> inner;
+
     private Async<Integer> outer;
 
-    private Promise<Object> r;
+    private Promise<Integer> r;
 
-    private FunT1<Exception, Promise<Object>> rf;
+    @Mock
+    private FunT1<Exception, Promise<Integer>> rf;
 
-    private Object rvalue;
+    private Integer rvalue;
 
     private Integer value;
 
@@ -49,30 +53,24 @@ public class AsyncRecoverTest {
     @Before
     public void setup() throws Throwable {
 
-        @SuppressWarnings("unchecked")
-        final FunT1<Exception, Promise<Object>> trf = mock(FunT1.class);
-
-        @SuppressWarnings("unchecked")
-        final Consumer<Object> tc = mock(Consumer.class);
+        MockitoAnnotations.initMocks(this);
 
         this.outer = Promises.async();
+
         this.inner = Promises.async();
 
         this.value = 12;
 
+        this.rvalue = 12390;
+
         this.x = new Exception();
 
-        when(trf.apply(this.x)).thenReturn(this.inner.promise());
+        when(this.rf.apply(this.x)).thenReturn(this.inner.promise());
 
         this.r = this.outer.promise().recover(Exception.class,
-                err -> trf.apply(err));
-
-        this.rvalue = "Hello";
+                err -> this.rf.apply(err));
 
         this.ix = new RuntimeException();
-
-        this.rf = trf;
-        this.c = tc;
 
     }
 
@@ -167,13 +165,19 @@ public class AsyncRecoverTest {
     @Test
     public void testFulfilled() throws Throwable {
 
-        this.r.on(Throwable.class, this.c);
+        this.r.forEach(this.c);
 
         this.outer.succeed(this.value);
 
+        /*
+         * recovery is not invoked
+         */
         verify(this.rf, never()).apply(any());
 
-        verify(this.c).accept(any(CancellationException.class));
+        /*
+         * outer fulfilled value is passed
+         */
+        verify(this.c).accept(this.value);
 
     }
 

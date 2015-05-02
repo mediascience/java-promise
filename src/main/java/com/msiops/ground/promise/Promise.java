@@ -404,14 +404,10 @@ public final class Promise<T> {
     /**
      * <p>
      * Recover from failure. Produces a promise tied to this promise's failure.
+     * If this promise is fulfilled, the chained recovery is also fulfilled and
+     * its recovery method is never called.
      * </p>
      *
-     * <p>
-     * Any {@link Throwable} thrown by the continuation is passed downstream
-     * </p>
-     *
-     * @param <R>
-     *            returned promise's value type.
      *
      * @param <X>
      *            selector token's type.
@@ -425,13 +421,13 @@ public final class Promise<T> {
      *
      * @return new promise to recover from failure.
      */
-    public <R, X extends Throwable> Promise<R> recover(final Class<X> sel,
-            final FunT1<? super X, Promise<R>> h) {
+    public <X extends Throwable> Promise<T> recover(final Class<X> sel,
+            final FunT1<? super X, ? extends Promise<T>> h) {
 
         Objects.requireNonNull(sel);
         Objects.requireNonNull(h);
 
-        final Promise<R> rval = new Promise<>();
+        final Promise<T> rval = new Promise<>();
 
         final Link<T> link = new Link<T>() {
             @Override
@@ -442,17 +438,17 @@ public final class Promise<T> {
                      * only respond to selected failure
                      */
 
-                    final Promise<? extends R> upstream;
+                    final Promise<? extends T> upstream;
                     try {
                         upstream = h.apply(sel.cast(x));
                     } catch (final Throwable t) {
                         rval.fail(t);
                         return;
                     }
-                    upstream.forEach(v -> rval.succeed(v));
+                    upstream.forEach(rval::succeed);
                     upstream.on(Throwable.class, rval::fail);
                 } else {
-                    rval.cancel();
+                    rval.succeed(value);
                 }
 
             }
