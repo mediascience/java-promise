@@ -461,6 +461,52 @@ public final class Promise<T> {
 
     /**
      * <p>
+     * Depend on result of arbitrary promise. It produces a downstream promise
+     * based on the completion of this promise and the argument. The fulfilled
+     * value of the downstream promise is the fulfilled value of this promise.
+     * The downstream promise is broken if either this promise or the argument
+     * is broken and the error produced by either is sent downstream. If both
+     * break, then the downstream is broken the same as this.
+     * </p>
+     *
+     * @param dep
+     *            promise on which downstream computation depends
+     *
+     * @return downstream promise
+     */
+    public Promise<T> require(final Promise<?> dep) {
+
+        Objects.requireNonNull(dep);
+
+        final Promise<T> rval = new Promise<>();
+
+        final Link<T> link = new Link<T>() {
+
+            @Override
+            public void next(final T value, final Throwable x) {
+
+                if (x != null) {
+                    rval.fail(x);
+                } else {
+                    /*
+                     * we are succeeded so two cases:
+                     */
+                    // dep is fulfilled, send our computed value
+                    dep.forEach(any -> rval.succeed(value));
+
+                    // dep is broken, send its error
+                    dep.on(Throwable.class, dx -> rval.fail(dx));
+                }
+            }
+        };
+
+        dispatch(link);
+
+        return rval;
+    }
+
+    /**
+     * <p>
      * Transform the value. Produces a new promise that will be fulfilled
      * independently if this promise is fulfilled. If this promise is fulfilled,
      * a new promise is produced and placed upstream of the returned promise. If
