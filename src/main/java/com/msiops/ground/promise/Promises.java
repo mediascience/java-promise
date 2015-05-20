@@ -92,47 +92,32 @@ public interface Promises {
     }
 
     /**
-     * Join a list of promises.
+     * <p>
+     * Join mapped promises. It takes a promise to compute a promise to compute
+     * a value and produces a promise to produce a value.
+     * </p>
+     *
      *
      * @param unjoined
-     *            list of promises to join. May be empty but must not be null.
-     *
-     * @return promised list of values.
-     *
-     * @throws NullPointerException
-     *             if argument is null.
+     * @return
      */
-    public static <T> Promise<List<T>> join(final List<Promise<T>> unjoined) {
+    public static <T> Promise<T> join(final Promise<Promise<T>> unjoined) {
 
-        final AtomicInteger remaining = new AtomicInteger(unjoined.size());
+        final Async<T> rasync = async();
 
-        final Promise<List<T>> downstream = new Promise<>();
+        /*
+         * three cases
+         */
+        // 1: inner and outer succeed
+        unjoined.forEach(pt -> pt.forEach(rasync::succeed));
 
-        @SuppressWarnings("unchecked")
-        final T[] result = (T[]) new Object[unjoined.size()];
+        // 2: outer succeeds, inner fails
+        unjoined.forEach(pt -> pt.on(Throwable.class, rasync::fail));
 
-        IntStream.range(0, unjoined.size()).forEach(i -> {
-            /*
-             * fetch upstream one time in case list is not random access.
-             */
-            final Promise<T> upstream = unjoined.get(i);
-            upstream.forEach(v -> {
-                result[i] = v;
-                if (remaining.decrementAndGet() == 0) {
-                    downstream.succeed(Arrays.asList(result));
-                }
-            });
-            /*
-             * the first promise to break breaks the downstream with the same
-             * error. note that this does not decrement the remaining counter,
-             * preventing the above forEach from fulfilling the downstream
-             * promise.
-             */
-            upstream.on(Throwable.class, downstream::fail);
-        });
+        // 3: outer fails
+        unjoined.on(Throwable.class, rasync::fail);
 
-        return downstream;
-
+        return rasync.promise();
     }
 
     /**
@@ -186,6 +171,51 @@ public interface Promises {
         final Promise<R> rval = new Promise<>();
         rval.complete(e);
         return rval;
+
+    }
+
+    /**
+     * Unite a list of promises. This takes a list of promises and unites them
+     * under a single promise to return a list of values.
+     *
+     * @param distinct
+     *            list of promises to unite. May be empty but must not be null.
+     *
+     * @return promised list of values.
+     *
+     * @throws NullPointerException
+     *             if argument is null.
+     */
+    public static <T> Promise<List<T>> unite(final List<Promise<T>> distinct) {
+
+        final AtomicInteger remaining = new AtomicInteger(distinct.size());
+
+        final Promise<List<T>> downstream = new Promise<>();
+
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) new Object[distinct.size()];
+
+        IntStream.range(0, distinct.size()).forEach(i -> {
+            /*
+             * fetch upstream one time in case list is not random access.
+             */
+            final Promise<T> upstream = distinct.get(i);
+            upstream.forEach(v -> {
+                result[i] = v;
+                if (remaining.decrementAndGet() == 0) {
+                    downstream.succeed(Arrays.asList(result));
+                }
+            });
+            /*
+             * the first promise to break breaks the downstream with the same
+             * error. note that this does not decrement the remaining counter,
+             * preventing the above forEach from fulfilling the downstream
+             * promise.
+             */
+            upstream.on(Throwable.class, downstream::fail);
+        });
+
+        return downstream;
 
     }
 

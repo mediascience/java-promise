@@ -230,91 +230,6 @@ public class UsageTest {
     }
 
     @Test
-    public void testJoinAsyncBroken() {
-
-        final AtomicReference<Object> cap = new AtomicReference<>();
-
-        final Async<Integer> a1 = Promises.async();
-        final Async<Integer> a2 = Promises.async();
-        final Async<Integer> a3 = Promises.async();
-        final Async<Integer> a4 = Promises.async();
-
-        final List<Promise<Integer>> listp = Arrays.asList(a1.promise(),
-                a2.promise(), a3.promise(), a4.promise());
-
-        Promises.join(listp).on(Throwable.class, cap::set);
-
-        final Exception x2 = new RuntimeException();
-        final Exception x3 = new RuntimeException();
-
-        assertNull(cap.get());
-
-        a1.succeed(1);
-        assertNull(cap.get());
-
-        a3.fail(x3);
-        assertEquals(cap.get(), x3);
-
-        a4.succeed(4);
-        assertEquals(cap.get(), x3);
-
-        a2.fail(x2);
-        assertEquals(cap.get(), x3);
-
-    }
-
-    @Test
-    public void testJoinAsyncFulfilled() {
-
-        final AtomicReference<Object> cap = new AtomicReference<>();
-
-        final Async<Integer> aone = Promises.async();
-        final Async<Integer> atwo = Promises.async();
-
-        final List<Promise<Integer>> listp = Arrays.asList(aone.promise(),
-                atwo.promise());
-
-        Promises.join(listp).forEach(cap::set);
-
-        assertNull(cap.get());
-        atwo.succeed(100);
-        assertNull(cap.get());
-        aone.succeed(12);
-
-        assertEquals(Arrays.asList(12, 100), cap.get());
-
-    }
-
-    @Test
-    public void testJoinDegenerateBroken() {
-
-        final AtomicReference<Object> cap = new AtomicReference<>();
-
-        final Exception x = new RuntimeException();
-        final List<Promise<Integer>> listp = Arrays.asList(
-                Promises.fulfilled(12), Promises.broken(x));
-
-        Promises.join(listp).on(Throwable.class, cap::set);
-
-        assertEquals(x, cap.get());
-
-    }
-
-    @Test
-    public void testJoinDegenerateFulfilled() {
-
-        final AtomicReference<Object> cap = new AtomicReference<>();
-
-        final List<Promise<Integer>> listp = Arrays.asList(
-                Promises.fulfilled(12), Promises.fulfilled(100));
-
-        Promises.join(listp).forEach(cap::set);
-
-        assertEquals(Arrays.asList(12, 100), cap.get());
-
-    }
-
-    @Test
     public void testLiftedOnAsyncBroken() {
 
         final Function<Promise<Integer>, Promise<String>> lifted = Promises
@@ -443,6 +358,91 @@ public class UsageTest {
         lifted.apply(Promises.fulfilled(12)).forEach(actual::set);
 
         assertEquals("24", actual.get());
+
+    }
+
+    @Test
+    public void testUniteListAsyncBroken() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        final Async<Integer> a1 = Promises.async();
+        final Async<Integer> a2 = Promises.async();
+        final Async<Integer> a3 = Promises.async();
+        final Async<Integer> a4 = Promises.async();
+
+        final List<Promise<Integer>> listp = Arrays.asList(a1.promise(),
+                a2.promise(), a3.promise(), a4.promise());
+
+        Promises.unite(listp).on(Throwable.class, cap::set);
+
+        final Exception x2 = new RuntimeException();
+        final Exception x3 = new RuntimeException();
+
+        assertNull(cap.get());
+
+        a1.succeed(1);
+        assertNull(cap.get());
+
+        a3.fail(x3);
+        assertEquals(cap.get(), x3);
+
+        a4.succeed(4);
+        assertEquals(cap.get(), x3);
+
+        a2.fail(x2);
+        assertEquals(cap.get(), x3);
+
+    }
+
+    @Test
+    public void testUniteListAsyncFulfilled() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        final Async<Integer> aone = Promises.async();
+        final Async<Integer> atwo = Promises.async();
+
+        final List<Promise<Integer>> listp = Arrays.asList(aone.promise(),
+                atwo.promise());
+
+        Promises.unite(listp).forEach(cap::set);
+
+        assertNull(cap.get());
+        atwo.succeed(100);
+        assertNull(cap.get());
+        aone.succeed(12);
+
+        assertEquals(Arrays.asList(12, 100), cap.get());
+
+    }
+
+    @Test
+    public void testUniteListDegenerateBroken() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        final Exception x = new RuntimeException();
+        final List<Promise<Integer>> listp = Arrays.asList(
+                Promises.fulfilled(12), Promises.broken(x));
+
+        Promises.unite(listp).on(Throwable.class, cap::set);
+
+        assertEquals(x, cap.get());
+
+    }
+
+    @Test
+    public void testUniteListDegenerateFulfilled() {
+
+        final AtomicReference<Object> cap = new AtomicReference<>();
+
+        final List<Promise<Integer>> listp = Arrays.asList(
+                Promises.fulfilled(12), Promises.fulfilled(100));
+
+        Promises.unite(listp).forEach(cap::set);
+
+        assertEquals(Arrays.asList(12, 100), cap.get());
 
     }
 
