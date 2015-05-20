@@ -92,6 +92,35 @@ public interface Promises {
     }
 
     /**
+     * <p>
+     * Join mapped promises. It takes a promise to compute a promise to compute
+     * a value and produces a promise to produce a value.
+     * </p>
+     *
+     *
+     * @param unjoined
+     * @return
+     */
+    public static <T> Promise<T> join(final Promise<Promise<T>> unjoined) {
+
+        final Async<T> rasync = async();
+
+        /*
+         * three cases
+         */
+        // 1: inner and outer succeed
+        unjoined.forEach(pt -> pt.forEach(rasync::succeed));
+
+        // 2: outer succeeds, inner fails
+        unjoined.forEach(pt -> pt.on(Throwable.class, rasync::fail));
+
+        // 3: outer fails
+        unjoined.on(Throwable.class, rasync::fail);
+
+        return rasync.promise();
+    }
+
+    /**
      * Convert a value function into a function that performs the computation
      * inside {@link Promise promises}.
      *
@@ -146,30 +175,31 @@ public interface Promises {
     }
 
     /**
-     * Join a list of promises.
+     * Unite a list of promises. This takes a list of promises and unites them
+     * under a single promise to return a list of values.
      *
-     * @param unjoined
-     *            list of promises to join. May be empty but must not be null.
+     * @param distinct
+     *            list of promises to unite. May be empty but must not be null.
      *
      * @return promised list of values.
      *
      * @throws NullPointerException
      *             if argument is null.
      */
-    public static <T> Promise<List<T>> unite(final List<Promise<T>> unjoined) {
+    public static <T> Promise<List<T>> unite(final List<Promise<T>> distinct) {
 
-        final AtomicInteger remaining = new AtomicInteger(unjoined.size());
+        final AtomicInteger remaining = new AtomicInteger(distinct.size());
 
         final Promise<List<T>> downstream = new Promise<>();
 
         @SuppressWarnings("unchecked")
-        final T[] result = (T[]) new Object[unjoined.size()];
+        final T[] result = (T[]) new Object[distinct.size()];
 
-        IntStream.range(0, unjoined.size()).forEach(i -> {
+        IntStream.range(0, distinct.size()).forEach(i -> {
             /*
              * fetch upstream one time in case list is not random access.
              */
-            final Promise<T> upstream = unjoined.get(i);
+            final Promise<T> upstream = distinct.get(i);
             upstream.forEach(v -> {
                 result[i] = v;
                 if (remaining.decrementAndGet() == 0) {
