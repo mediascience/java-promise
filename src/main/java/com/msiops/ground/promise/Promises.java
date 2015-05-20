@@ -93,13 +93,20 @@ public interface Promises {
 
     /**
      * <p>
-     * Join mapped promises. It takes a promise to compute a promise to compute
-     * a value and produces a promise to produce a value.
+     * Join nested promises.
      * </p>
      *
-     *
      * @param unjoined
-     * @return
+     *            promise to compute a promise to compute a value.
+     *
+     * @param <T>
+     *            the computed value type.
+     *
+     * @return promise to compute a value.
+     *
+     * @throws NullPointerException
+     *             if argument is null.
+     *
      */
     public static <T> Promise<T> join(final Promise<Promise<T>> unjoined) {
 
@@ -180,6 +187,9 @@ public interface Promises {
      *
      * @param distinct
      *            list of promises to unite. May be empty but must not be null.
+     *
+     * @param <T>
+     *            the list element type.
      *
      * @return promised list of values.
      *
